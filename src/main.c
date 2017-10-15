@@ -68,7 +68,7 @@
 #define SPRITE7_DATA    0x0340
 #define SPRITE7_PTR     0x07F
 */
-#define DRIVER          "c64-stdjoy.joy"
+#define DRIVER          "c64-ptvjoy.joy"
 
 unsigned char p1_step=1;
 unsigned char p1_throw_step=0;
@@ -210,10 +210,11 @@ void p1_throw()
   }
   ++p1_throw_step;
   if(p1_throw_step>6)
-    {
-      p1_throw_step=0;
-      p1_snow=0;
-    }
+  {
+    p1_throw_step=0;
+    p1_snow=0;
+  }
+  p1_vec=3;
 }
 
 void p1_pickup()
@@ -251,10 +252,107 @@ void p1_pickup()
     }
 }
 
+void p1_move()
+{
+
+  unsigned char j1;
+  //unsigned char j2;
+
+  j1 = joy_read (JOY_1);
+
+  //  j2=joy_read (JOY_2);
+  if(JOY_BTN_1 (j1))
+  {
+    if(JOY_DOWN (j1) && p1_snow==0)
+    {
+      p1_pickup();
+    }
+    else if(p1_snow==1)
+    {
+      p1_throw();
+    }
+  }
+
+  else if(JOY_DOWN (j1) && JOY_LEFT (j1))
+  {
+    if(VIC.spr0_y < heightMax && VIC.spr0_x > widthMin)
+    {
+        p1_left();
+        VIC.spr0_y = ++VIC.spr0_y;
+    }
+  }
+  else if(JOY_DOWN (j1) && JOY_RIGHT (j1))
+  {
+    if(VIC.spr0_y < heightMax && VIC.spr0_x < widthMax)
+    {
+        p1_right();
+        VIC.spr0_y = ++VIC.spr0_y;
+    }
+  }
+  else if(JOY_UP (j1) && JOY_RIGHT (j1))
+  {
+    if(VIC.spr0_y > heightMin && VIC.spr0_x < widthMax)
+    {
+        p1_right();
+        VIC.spr0_y = --VIC.spr0_y;
+    }
+  }
+  else if(JOY_UP (j1) && JOY_LEFT (j1))
+  {
+    if(VIC.spr0_y > heightMin && VIC.spr0_x > widthMin)
+    {
+        p1_left();
+        VIC.spr0_y = --VIC.spr0_y;
+    }
+  }
+
+  else if(JOY_DOWN (j1))
+  {
+    if(VIC.spr0_y < heightMax){
+        p1_down();
+    }
+  }
+
+  else if(JOY_UP (j1))
+  {
+    if(VIC.spr0_y > heightMin){
+       p1_up();
+    }
+  }
+
+  else if(JOY_LEFT (j1))
+  {
+    if(VIC.spr0_x > widthMin){
+      p1_left();
+    }
+  }
+  else if(JOY_RIGHT (j1))
+  {
+    if(VIC.spr0_x < widthMax){
+      p1_right();
+    }
+  }
+  else
+  {
+    p1_still();
+  }
+
+  if(p1_throw_step>0)
+  {
+    p1_throw();
+  }
+  else if(p1_pick_step>0)
+  {
+    p1_pickup();
+  } 
+}
+
+
+
+
 int main( void )
 {
-  unsigned char j1;
-  unsigned char j2;
+
 
   unsigned char sRunning =1;
   unsigned char a;
@@ -290,8 +388,7 @@ int main( void )
   VIC.spr2_color = 12;
 
   VIC.spr_ena=1;
-  VIC.spr_ena=2;
-  
+
   VIC.spr0_x = 100;
   VIC.spr0_y = 100;
 
@@ -301,105 +398,12 @@ int main( void )
   VIC.spr1_x = 120;
   VIC.spr1_y = 120;
 
-  j1=joy_read (JOY_1);
-  j2=joy_read (JOY_2);
-
   while( sRunning )
   {
-
-    j1 = joy_read (JOY_1);
-
-      if(JOY_BTN_1 (j1))
-      {
-        if(JOY_DOWN (j1) && p1_snow==0)
-        {
-          p1_pickup();
-        }
-        else if(p1_throw_step==0 && p1_snow==1)
-        {
-          p1_throw();
-        }
-      }
-    
-      else if(JOY_DOWN (j1) && JOY_LEFT (j1))
-      {
-        if(VIC.spr0_y < heightMax && VIC.spr0_x > widthMin)
-        {
-            p1_left();
-            VIC.spr0_y = ++VIC.spr0_y;
-        }
-      }
-      else if(JOY_DOWN (j1) && JOY_RIGHT (j1))
-      {
-        if(VIC.spr0_y < heightMax && VIC.spr0_x < widthMax)
-        {
-            p1_right();
-            VIC.spr0_y = ++VIC.spr0_y;
-        }
-      }
-      else if(JOY_UP (j1) && JOY_RIGHT (j1))
-      {
-        if(VIC.spr0_y > heightMin && VIC.spr0_x < widthMax)
-        {
-            p1_right();
-            VIC.spr0_y = --VIC.spr0_y;
-        }
-      }
-      else if(JOY_UP (j1) && JOY_LEFT (j1))
-      {
-        if(VIC.spr0_y > heightMin && VIC.spr0_x > widthMin)
-        {
-            p1_left();
-            VIC.spr0_y = --VIC.spr0_y;
-        }
-      }
-
-      else if(JOY_DOWN (j1))
-      {
-        if(VIC.spr0_y < heightMax){
-            p1_down();
-        }
-      }
-
-      else if(JOY_UP (j1))
-      {
-        if(VIC.spr0_y > heightMin){
-           p1_up();
-        }
-      }
-
-      else if(JOY_LEFT (j1))
-      {
-        if(VIC.spr0_x > widthMin){
-          p1_left();
-        }
-      }
-      else if(JOY_RIGHT (j1))
-      {
-        if(VIC.spr0_x < widthMax){
-          p1_right();
-        }
-      }
-      else
-      {
-        p1_still();
-      }
-
-      if(p1_throw_step>0)
-      {
-        p1_throw();
-      }
-
-      if(p1_pick_step>0)
-      {
-        p1_pickup();
-      }
-
-   }
-  
-
-
-
+    p1_move();
+    //p2_move();
+  }
 
   return(0);
 }
+
