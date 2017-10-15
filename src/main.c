@@ -38,8 +38,11 @@
 #define PETSCII_RIGHT 0x1D
 #define PETSCII_LEFT  0x9D
 
-#define screenH 200
-#define screenW 320
+
+#define heightMin 50
+#define heightMax 230
+#define widthMin 24 
+#define widthMax 254
 
 #define SPRITE0_DATA    0x0340
 #define SPRITE0_PTR     0x07F8
@@ -67,7 +70,11 @@
 */
 #define DRIVER          "c64-stdjoy.joy"
 
-char p1_step=1;
+unsigned char p1_step=1;
+unsigned char p1_throw_step=0;
+unsigned char p1_pick_step=0;
+unsigned char p1_snow=0;
+unsigned char p1_vec=0;
 
 static char shapes[7][4] = {
   {0,1,40,41},   //square
@@ -80,116 +87,177 @@ static char shapes[7][4] = {
 };
 
 
-void runup()
+void p1_up()
 {
-  printf("%d",p1_step);
   switch( p1_step )
   {
     //Move cursor down
     case 0:
-      memcpy ((void*) SPRITE0_DATA, p1_run35, sizeof (p1_run0));
-      VIC.spr0_x = --VIC.spr0_y;
+      memcpy ((void*) SPRITE0_DATA, p1_run36, sizeof (p1_run36));
       break;
-
     case 1:
-      memcpy ((void*) SPRITE0_DATA, p1_run36, sizeof (p1_run1));
-      VIC.spr0_x = --VIC.spr0_y;
-      break;
-
-    case 2:
-      memcpy ((void*) SPRITE0_DATA, p1_run37, sizeof (p1_run2));
-      VIC.spr0_x = --VIC.spr0_y;
+      memcpy ((void*) SPRITE0_DATA, p1_run37, sizeof (p1_run37));
       break;
   }
+  VIC.spr0_y = --VIC.spr0_y;
   ++p1_step;
-  if(p1_step>2){p1_step=0;}
+  if(p1_step>1){p1_step=0;}
+  p1_vec=0;
 }
 
-void rundown()
+void p1_down()
 {
-  printf("%d",p1_step);
   switch( p1_step )
   {
     //Move cursor down
     case 0:
-      memcpy ((void*) SPRITE0_DATA, p1_run32, sizeof (p1_run0));
-      VIC.spr0_x = ++VIC.spr0_y;
+      memcpy ((void*) SPRITE0_DATA, p1_run33, sizeof (p1_run33));
       break;
-
     case 1:
-      memcpy ((void*) SPRITE0_DATA, p1_run33, sizeof (p1_run1));
-      VIC.spr0_x = ++VIC.spr0_y;
-      break;
-
-    case 2:
-      memcpy ((void*) SPRITE0_DATA, p1_run34, sizeof (p1_run2));
-      VIC.spr0_x = ++VIC.spr0_y;
+      memcpy ((void*) SPRITE0_DATA, p1_run34, sizeof (p1_run34));
       break;
   }
+  VIC.spr0_y = ++VIC.spr0_y;
   ++p1_step;
-  if(p1_step>2){p1_step=0;}
+  if(p1_step>1){p1_step=0;}
+  p1_vec=1;
 }
 
 
-void runleft()
+void p1_left()
 {
-  printf("%d",p1_step);
   switch( p1_step )
   {
     //Move cursor down
     case 0:
-      memcpy ((void*) SPRITE0_DATA, p1_run16, sizeof (p1_run0));
-      VIC.spr0_x = --VIC.spr0_x;
+      memcpy ((void*) SPRITE0_DATA, p1_run16, sizeof (p1_run16));
       break;
-
     case 1:
-      memcpy ((void*) SPRITE0_DATA, p1_run17, sizeof (p1_run1));
-      VIC.spr0_x = --VIC.spr0_x;
-      break;
-
-    case 2:
-      memcpy ((void*) SPRITE0_DATA, p1_run18, sizeof (p1_run2));
-      VIC.spr0_x = --VIC.spr0_x;
+      memcpy ((void*) SPRITE0_DATA, p1_run18, sizeof (p1_run18));
       break;
   }
+  VIC.spr0_x = --VIC.spr0_x;
   ++p1_step;
-  if(p1_step>2){p1_step=0;}
+  if(p1_step>1){p1_step=0;}
+  p1_vec=2;
+
 }
 
-void runright()
+void p1_right()
 {
-  printf("%d",p1_step);
   switch( p1_step )
   {
     //Move cursor down
     case 0:
       memcpy ((void*) SPRITE0_DATA, p1_run0, sizeof (p1_run0));
-      VIC.spr0_x = ++VIC.spr0_x;
       break;
-
     case 1:
-      memcpy ((void*) SPRITE0_DATA, p1_run1, sizeof (p1_run1));
-      VIC.spr0_x = ++VIC.spr0_x;
+      memcpy ((void*) SPRITE0_DATA, p1_run2, sizeof (p1_run2));
       break;
 
-    case 2:
-      memcpy ((void*) SPRITE0_DATA, p1_run2, sizeof (p1_run2));
-      VIC.spr0_x = ++VIC.spr0_x;
-      break;
   }
+  VIC.spr0_x = ++VIC.spr0_x;
   ++p1_step;
-  if(p1_step>2){p1_step=0;}
+  if(p1_step>1){p1_step=0;}
+  p1_vec=3;
 }
 
+void p1_still()
+{
+  switch( p1_vec )
+  {
+    case 0:
+      memcpy ((void*) SPRITE0_DATA, p1_run35, sizeof (p1_run35));
+      break;
+    case 1:
+      memcpy ((void*) SPRITE0_DATA, p1_run32, sizeof (p1_run32));
+      break;
+    case 2:
+      memcpy ((void*) SPRITE0_DATA, p1_run17, sizeof (p1_run17));
+      break;
+    case 3:
+      memcpy ((void*) SPRITE0_DATA, p1_run1, sizeof (p1_run1));
+      break;
+  }
+}
 
+void p1_throw()
+{
+  switch( p1_throw_step )
+  {
+    //Move cursor down
+    case 0:
+      memcpy ((void*) SPRITE0_DATA, p1_img7, sizeof (p1_run0));
+      break;
+    case 1:
+      memcpy ((void*) SPRITE0_DATA, p1_img8, sizeof (p1_run2));
+      break;
+    case 2:
+      memcpy ((void*) SPRITE0_DATA, p1_img9, sizeof (p1_run0));
+      break;
+    case 3:
+      memcpy ((void*) SPRITE0_DATA, p1_img10, sizeof (p1_run2));
+      break;
+    case 4:
+      memcpy ((void*) SPRITE0_DATA, p1_img11, sizeof (p1_run0));
+      break;
+    case 5:
+      memcpy ((void*) SPRITE0_DATA, p1_img12, sizeof (p1_run2));
+      break;
+    case 6:
+      memcpy ((void*) SPRITE0_DATA, p1_img13, sizeof (p1_run0));
+      break;
+  }
+  ++p1_throw_step;
+  if(p1_throw_step>6)
+    {
+      p1_throw_step=0;
+      p1_snow=0;
+    }
+}
+
+void p1_pickup()
+{
+  switch( p1_pick_step )
+  {
+    //Move cursor down
+    case 0:
+      memcpy ((void*) SPRITE0_DATA, p1_img3, sizeof (p1_run0));
+      break;
+    case 1:
+      memcpy ((void*) SPRITE0_DATA, p1_img4, sizeof (p1_run2));
+      break;
+    case 2:
+      memcpy ((void*) SPRITE0_DATA, p1_img5, sizeof (p1_run0));
+      break;
+    case 3:
+      memcpy ((void*) SPRITE0_DATA, p1_img6, sizeof (p1_run2));
+      break;
+    case 4:
+      memcpy ((void*) SPRITE0_DATA, p1_img5, sizeof (p1_run0));
+      break;
+    case 5:
+      memcpy ((void*) SPRITE0_DATA, p1_img4, sizeof (p1_run2));
+      break;
+    case 6:
+      memcpy ((void*) SPRITE0_DATA, p1_img3, sizeof (p1_run0));
+      break;
+  }
+  ++p1_pick_step;
+  if(p1_pick_step>6)
+    {
+      p1_pick_step=0;
+      p1_snow=1;
+    }
+}
 
 int main( void )
 {
+  unsigned char j1;
+  unsigned char j2;
 
-  struct mouse_info info;
-
-  char sRunning =1;
-  char pet;
+  unsigned char sRunning =1;
+  unsigned char a;
 
   memcpy ((void*) SPRITE0_DATA, p1_run1, sizeof (p1_run1));
   memcpy ((void*) SPRITE1_DATA, p2_run1, sizeof (p2_run1));
@@ -197,7 +265,7 @@ int main( void )
   memcpy ((void*) SPRITE2_DATA, sb_snowball, sizeof (sb_snowball));
 
   /* Load and install the mouse driver */
-  //joy_load_driver (DRIVER);
+  joy_load_driver (DRIVER);
 /* Set the VIC sprite pointer */
     *(unsigned char*)SPRITE0_PTR = SPRITE0_DATA / 64;
     *(unsigned char*)SPRITE1_PTR = SPRITE1_DATA / 64;
@@ -222,63 +290,113 @@ int main( void )
   VIC.spr2_color = 12;
 
   VIC.spr_ena=1;
-
+  VIC.spr_ena=2;
+  
   VIC.spr0_x = 100;
   VIC.spr0_y = 100;
 
-  VIC.spr1_x = 200;
-  VIC.spr1_y = 100;
+  VIC.spr1_x = 110;
+  VIC.spr1_y = 110;
 
+  VIC.spr1_x = 120;
+  VIC.spr1_y = 120;
+
+  j1=joy_read (JOY_1);
+  j2=joy_read (JOY_2);
 
   while( sRunning )
   {
 
-    if( kbhit() )
-    {
+    j1 = joy_read (JOY_1);
 
-      //uint8_t pet = cgetc();
-      pet = cgetc();
-
-      switch( pet )
+      if(JOY_BTN_1 (j1))
       {
-        //Move cursor down
-        case PETSCII_DOWN:
-
-          if(VIC.spr0_y < screenH){
-            VIC.spr0_y = ++VIC.spr0_y;
-          }
-          break;
-
-        //Move cursor up
-        case PETSCII_UP:
-
-          if(VIC.spr0_y > 0){
-            VIC.spr0_y = --VIC.spr0_y;
-          }
-          break;
-
-        //Move cursor left
-        case PETSCII_LEFT:
-
-          if(VIC.spr0_x > 0){
-            runleft();
-          }
-          break;
-
-        //Move cursor right
-        case PETSCII_RIGHT:
-          
-          if(VIC.spr0_x < screenW){
-            runright();
-          }
-          break;
+        if(JOY_DOWN (j1) && p1_snow==0)
+        {
+          p1_pickup();
         }
-
+        else if(p1_throw_step==0 && p1_snow==1)
+        {
+          p1_throw();
+        }
+      }
+    
+      else if(JOY_DOWN (j1) && JOY_LEFT (j1))
+      {
+        if(VIC.spr0_y < heightMax && VIC.spr0_x > widthMin)
+        {
+            p1_left();
+            VIC.spr0_y = ++VIC.spr0_y;
+        }
+      }
+      else if(JOY_DOWN (j1) && JOY_RIGHT (j1))
+      {
+        if(VIC.spr0_y < heightMax && VIC.spr0_x < widthMax)
+        {
+            p1_right();
+            VIC.spr0_y = ++VIC.spr0_y;
+        }
+      }
+      else if(JOY_UP (j1) && JOY_RIGHT (j1))
+      {
+        if(VIC.spr0_y > heightMin && VIC.spr0_x < widthMax)
+        {
+            p1_right();
+            VIC.spr0_y = --VIC.spr0_y;
+        }
+      }
+      else if(JOY_UP (j1) && JOY_LEFT (j1))
+      {
+        if(VIC.spr0_y > heightMin && VIC.spr0_x > widthMin)
+        {
+            p1_left();
+            VIC.spr0_y = --VIC.spr0_y;
+        }
       }
 
-    //printf(VIC.rasterline);
-   
-  }
+      else if(JOY_DOWN (j1))
+      {
+        if(VIC.spr0_y < heightMax){
+            p1_down();
+        }
+      }
+
+      else if(JOY_UP (j1))
+      {
+        if(VIC.spr0_y > heightMin){
+           p1_up();
+        }
+      }
+
+      else if(JOY_LEFT (j1))
+      {
+        if(VIC.spr0_x > widthMin){
+          p1_left();
+        }
+      }
+      else if(JOY_RIGHT (j1))
+      {
+        if(VIC.spr0_x < widthMax){
+          p1_right();
+        }
+      }
+      else
+      {
+        p1_still();
+      }
+
+      if(p1_throw_step>0)
+      {
+        p1_throw();
+      }
+
+      if(p1_pick_step>0)
+      {
+        p1_pickup();
+      }
+
+   }
+  
 
 
 
