@@ -263,11 +263,11 @@ void p1_move()
   //  j2=joy_read (JOY_2);
   if(JOY_BTN_1 (j1))
   {
-    if(JOY_DOWN (j1) && p1_snow==0)
+    if(JOY_DOWN (j1))
     {
       p1_pickup();
     }
-    else if(p1_snow==1)
+    else
     {
       p1_throw();
     }
@@ -398,6 +398,7 @@ int main( void )
   VIC.spr1_x = 120;
   VIC.spr1_y = 120;
 
+  printf("Snowball Fighters");
   while( sRunning )
   {
     p1_move();
