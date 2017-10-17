@@ -68,6 +68,9 @@
 #define SPRITE7_DATA    0x0340
 #define SPRITE7_PTR     0x07F
 */
+
+#define step_frame 10
+
 #define DRIVER          "c64-ptvjoy.joy"
 
 unsigned char p1_step=1;
@@ -75,6 +78,8 @@ unsigned char p1_throw_step=0;
 unsigned char p1_pick_step=0;
 unsigned char p1_snow=0;
 unsigned char p1_vec=0;
+unsigned char p1_trigger=0;
+unsigned char p1_throw_trig=0;
 
 static char shapes[7][4] = {
   {0,1,40,41},   //square
@@ -89,77 +94,122 @@ static char shapes[7][4] = {
 
 void p1_up()
 {
-  switch( p1_step )
-  {
-    //Move cursor down
-    case 0:
-      memcpy ((void*) SPRITE0_DATA, p1_run36, sizeof (p1_run36));
-      break;
-    case 1:
-      memcpy ((void*) SPRITE0_DATA, p1_run37, sizeof (p1_run37));
-      break;
-  }
+
   VIC.spr0_y = --VIC.spr0_y;
-  ++p1_step;
-  if(p1_step>1){p1_step=0;}
-  p1_vec=0;
+
+  if(p1_vec!=0){
+    p1_vec=0;
+    p1_trigger=step_frame;
+  }
+
+  if(p1_trigger == step_frame){
+
+    switch( p1_step )
+    {
+      //Move cursor down
+      case 0:
+        memcpy ((void*) SPRITE0_DATA, p1_run36, sizeof (p1_run36));
+        break;
+      case 1:
+        memcpy ((void*) SPRITE0_DATA, p1_run37, sizeof (p1_run37));
+        break;
+    }
+    ++p1_step;
+    if(p1_step>1){p1_step=0;}
+  }
+  ++p1_trigger;
+  if(p1_trigger>step_frame){p1_trigger=0;}
+
 }
 
 void p1_down()
 {
-  switch( p1_step )
-  {
-    //Move cursor down
-    case 0:
-      memcpy ((void*) SPRITE0_DATA, p1_run33, sizeof (p1_run33));
-      break;
-    case 1:
-      memcpy ((void*) SPRITE0_DATA, p1_run34, sizeof (p1_run34));
-      break;
-  }
+
   VIC.spr0_y = ++VIC.spr0_y;
-  ++p1_step;
-  if(p1_step>1){p1_step=0;}
-  p1_vec=1;
+  
+  if(p1_vec!=1){
+    p1_vec=1;
+    p1_trigger=step_frame;
+  }
+
+  if(p1_trigger == step_frame){
+
+    switch( p1_step )
+    {
+      //Move cursor down
+      case 0:
+        memcpy ((void*) SPRITE0_DATA, p1_run33, sizeof (p1_run33));
+        break;
+      case 1:
+        memcpy ((void*) SPRITE0_DATA, p1_run34, sizeof (p1_run34));
+        break;
+    }
+    ++p1_step;
+    if(p1_step>1){p1_step=0;}
+  }
+  ++p1_trigger;
+  if(p1_trigger>step_frame){p1_trigger=0;}
+
 }
 
 
 void p1_left()
 {
-  switch( p1_step )
-  {
-    //Move cursor down
-    case 0:
-      memcpy ((void*) SPRITE0_DATA, p1_run16, sizeof (p1_run16));
-      break;
-    case 1:
-      memcpy ((void*) SPRITE0_DATA, p1_run18, sizeof (p1_run18));
-      break;
-  }
-  VIC.spr0_x = --VIC.spr0_x;
-  ++p1_step;
-  if(p1_step>1){p1_step=0;}
-  p1_vec=2;
 
+  VIC.spr0_x = --VIC.spr0_x;
+  
+  if(p1_vec!=2){
+    p1_vec=2;
+    p1_trigger=step_frame;
+  }
+
+  if(p1_trigger == step_frame){
+
+    switch( p1_step )
+    {
+      case 0:
+        memcpy ((void*) SPRITE0_DATA, p1_run16, sizeof (p1_run16));
+        break;
+      case 1:
+        memcpy ((void*) SPRITE0_DATA, p1_run18, sizeof (p1_run18));
+        break;
+    }
+
+    ++p1_step;
+    if(p1_step>1){p1_step=0;}
+  }
+  ++p1_trigger;
+  if(p1_trigger>step_frame){p1_trigger=0;}
 }
 
 void p1_right()
 {
-  switch( p1_step )
-  {
-    //Move cursor down
-    case 0:
-      memcpy ((void*) SPRITE0_DATA, p1_run0, sizeof (p1_run0));
-      break;
-    case 1:
-      memcpy ((void*) SPRITE0_DATA, p1_run2, sizeof (p1_run2));
-      break;
 
-  }
   VIC.spr0_x = ++VIC.spr0_x;
-  ++p1_step;
-  if(p1_step>1){p1_step=0;}
-  p1_vec=3;
+
+  if(p1_vec!=3){
+    p1_vec=3;
+    p1_trigger=step_frame;
+  }
+
+  if(p1_trigger == step_frame){
+
+    switch( p1_step )
+    {
+      //Move cursor down
+      case 0:
+        memcpy ((void*) SPRITE0_DATA, p1_run0, sizeof (p1_run0));
+        break;
+      case 1:
+        memcpy ((void*) SPRITE0_DATA, p1_run2, sizeof (p1_run2));
+        break;
+
+    }
+    ++p1_step;
+    if(p1_step>1){p1_step=0;}
+  }
+  ++p1_trigger;
+  if(p1_trigger>step_frame){p1_trigger=0;}
 }
 
 void p1_still()
@@ -183,38 +233,47 @@ void p1_still()
 
 void p1_throw()
 {
-  switch( p1_throw_step )
-  {
-    //Move cursor down
-    case 0:
-      memcpy ((void*) SPRITE0_DATA, p1_img7, sizeof (p1_run0));
-      break;
-    case 1:
-      memcpy ((void*) SPRITE0_DATA, p1_img8, sizeof (p1_run2));
-      break;
-    case 2:
-      memcpy ((void*) SPRITE0_DATA, p1_img9, sizeof (p1_run0));
-      break;
-    case 3:
-      memcpy ((void*) SPRITE0_DATA, p1_img10, sizeof (p1_run2));
-      break;
-    case 4:
-      memcpy ((void*) SPRITE0_DATA, p1_img11, sizeof (p1_run0));
-      break;
-    case 5:
-      memcpy ((void*) SPRITE0_DATA, p1_img12, sizeof (p1_run2));
-      break;
-    case 6:
-      memcpy ((void*) SPRITE0_DATA, p1_img13, sizeof (p1_run0));
-      break;
+
+  if(p1_vec!=3){
+    p1_vec=3;
+    p1_throw_trig=20;
   }
-  ++p1_throw_step;
-  if(p1_throw_step>6)
-  {
-    p1_throw_step=0;
-    p1_snow=0;
+
+  if(p1_throw_trig == 20){
+    printf("%d",p1_throw_step);
+    switch( p1_throw_step )
+    {
+      case 0:
+        memcpy ((void*) SPRITE0_DATA, p1_img7, sizeof (p1_run0));
+        break;
+      case 1:
+        memcpy ((void*) SPRITE0_DATA, p1_img8, sizeof (p1_run2));
+        break;
+      case 2:
+        memcpy ((void*) SPRITE0_DATA, p1_img9, sizeof (p1_run0));
+        break;
+      case 3:
+        memcpy ((void*) SPRITE0_DATA, p1_img10, sizeof (p1_run2));
+        break;
+      case 4:
+        memcpy ((void*) SPRITE0_DATA, p1_img11, sizeof (p1_run0));
+        break;
+      case 5:
+        memcpy ((void*) SPRITE0_DATA, p1_img12, sizeof (p1_run2));
+        break;
+      case 6:
+        memcpy ((void*) SPRITE0_DATA, p1_img13, sizeof (p1_run0));
+        break;
+    }
+    ++p1_throw_step;
+    if(p1_throw_step>6)
+    {
+      p1_throw_step=0;
+      p1_snow=0;
+    }
   }
-  p1_vec=3;
+  ++p1_throw_trig;
+  if(p1_throw_trig>20){p1_throw_trig=0;}
 }
 
 void p1_pickup()
@@ -353,6 +412,7 @@ void p1_move()
 int main( void )
 {
 
+  int (*p)(int, int);
 
   unsigned char sRunning =1;
   unsigned char a;
@@ -403,6 +463,9 @@ int main( void )
   {
     p1_move();
     //p2_move();
+
+
+    for(a=0;a<100;a++){/*test*/};
   }
 
   return(0);
