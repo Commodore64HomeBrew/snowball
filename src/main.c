@@ -435,6 +435,8 @@ int main( void )
 
   //joy_install (DRIVER);
   VIC.spr_mcolor = 1;
+  VIC.spr_mcolor =0x3; 
+  VIC.spr_mcolor =0x7;
 
   VIC.spr_mcolor0 = COLOR_BLACK;
   VIC.spr_mcolor1 = COLOR_YELLOW;
@@ -447,7 +449,9 @@ int main( void )
   //Snowball colour:
   VIC.spr2_color = 12;
 
-  VIC.spr_ena=1;
+  VIC.spr_ena=0x1;
+  VIC.spr_ena=0x3;
+  VIC.spr_ena=0x7;
 
   VIC.spr0_x = 100;
   VIC.spr0_y = 100;
@@ -455,15 +459,19 @@ int main( void )
   VIC.spr1_x = 110;
   VIC.spr1_y = 110;
 
-  VIC.spr1_x = 120;
-  VIC.spr1_y = 120;
+  VIC.spr2_x = 120;
+  VIC.spr2_y = 120;
 
   printf("Snowball Fighters");
   while( sRunning )
   {
     p1_move();
     //p2_move();
-
+    memcpy ((void*) SPRITE1_DATA, p2_run1, sizeof (p2_run1));
+    VIC.spr1_x = VIC.spr0_x-30;
+    VIC.spr1_y = VIC.spr0_y-30;
+    
+    joy_read (3);
 
     for(a=0;a<100;a++){/*test*/};
   }
