@@ -81,6 +81,8 @@ unsigned char p1_vec=0;
 unsigned char p1_trigger=0;
 unsigned char p1_throw_trig=0;
 
+unsigned char player =1;
+
 static char shapes[7][4] = {
   {0,1,40,41},   //square
   {0,40,80,120}, //vertical line
@@ -108,10 +110,10 @@ void p1_up()
     {
       //Move cursor down
       case 0:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][36], sizeof (p_sprites[0][36]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][36], sizeof (p_sprites[player][36]));
         break;
       case 1:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][37], sizeof (p_sprites[0][37]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][37], sizeof (p_sprites[player][37]));
         break;
     }
     ++p1_step;
@@ -138,10 +140,10 @@ void p1_down()
     {
       //Move cursor down
       case 0:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][33], sizeof (p_sprites[0][33]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][33], sizeof (p_sprites[player][33]));
         break;
       case 1:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][34], sizeof (p_sprites[0][34]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][34], sizeof (p_sprites[player][34]));
         break;
     }
     ++p1_step;
@@ -168,10 +170,10 @@ void p1_left()
     switch( p1_step )
     {
       case 0:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][16], sizeof (p_sprites[0][16]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][16], sizeof (p_sprites[player][16]));
         break;
       case 1:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][18], sizeof (p_sprites[0][18]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][18], sizeof (p_sprites[player][18]));
         break;
     }
 
@@ -197,10 +199,10 @@ void p1_right()
     switch( p1_step )
     {
       case 0:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][0], sizeof (p_sprites[0][0]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][0], sizeof (p_sprites[player][0]));
         break;
       case 1:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][2], sizeof (p_sprites[0][2]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][2], sizeof (p_sprites[player][2]));
         break;
 
     }
@@ -216,16 +218,16 @@ void p1_still()
   switch( p1_vec )
   {
     case 0:
-      memcpy ((void*) SPRITE0_DATA, p_sprites[0][35], sizeof (p_sprites[0][35]));
+      memcpy ((void*) SPRITE0_DATA, p_sprites[player][35], sizeof (p_sprites[player][35]));
       break;
     case 1:
-      memcpy ((void*) SPRITE0_DATA, p_sprites[0][32], sizeof (p_sprites[0][32]));
+      memcpy ((void*) SPRITE0_DATA, p_sprites[player][32], sizeof (p_sprites[player][32]));
       break;
     case 2:
-      memcpy ((void*) SPRITE0_DATA, p_sprites[0][17], sizeof (p_sprites[0][17]));
+      memcpy ((void*) SPRITE0_DATA, p_sprites[player][17], sizeof (p_sprites[player][17]));
       break;
     case 3:
-      memcpy ((void*) SPRITE0_DATA, p_sprites[0][1], sizeof (p_sprites[0][1]));
+      memcpy ((void*) SPRITE0_DATA, p_sprites[player][1], sizeof (p_sprites[player][1]));
       break;
   }
 }
@@ -243,25 +245,25 @@ void p1_throw()
     switch( p1_throw_step )
     {
       case 0:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][7], sizeof (p_sprites[0][0]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][7], sizeof (p_sprites[player][0]));
         break;
       case 1:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][8], sizeof (p_sprites[0][2]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][8], sizeof (p_sprites[player][2]));
         break;
       case 2:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][9], sizeof (p_sprites[0][0]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][9], sizeof (p_sprites[player][0]));
         break;
       case 3:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][10], sizeof (p_sprites[0][2]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][10], sizeof (p_sprites[player][2]));
         break;
       case 4:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][11], sizeof (p_sprites[0][0]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][11], sizeof (p_sprites[player][0]));
         break;
       case 5:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][12], sizeof (p_sprites[0][2]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][12], sizeof (p_sprites[player][2]));
         break;
       case 6:
-        memcpy ((void*) SPRITE0_DATA, p_sprites[0][13], sizeof (p_sprites[0][0]));
+        memcpy ((void*) SPRITE0_DATA, p_sprites[player][13], sizeof (p_sprites[player][0]));
         break;
     }
     ++p1_throw_step;
@@ -281,25 +283,25 @@ void p1_pickup()
   {
     //Move cursor down
     case 0:
-      memcpy ((void*) SPRITE0_DATA, p_sprites[0][3], sizeof (p_sprites[0][0]));
+      memcpy ((void*) SPRITE0_DATA, p_sprites[player][3], sizeof (p_sprites[player][0]));
       break;
     case 1:
-      memcpy ((void*) SPRITE0_DATA, p_sprites[0][4], sizeof (p_sprites[0][2]));
+      memcpy ((void*) SPRITE0_DATA, p_sprites[player][4], sizeof (p_sprites[player][2]));
       break;
     case 2:
-      memcpy ((void*) SPRITE0_DATA, p_sprites[0][5], sizeof (p_sprites[0][0]));
+      memcpy ((void*) SPRITE0_DATA, p_sprites[player][5], sizeof (p_sprites[player][0]));
       break;
     case 3:
-      memcpy ((void*) SPRITE0_DATA, p_sprites[0][6], sizeof (p_sprites[0][2]));
+      memcpy ((void*) SPRITE0_DATA, p_sprites[player][6], sizeof (p_sprites[player][2]));
       break;
     case 4:
-      memcpy ((void*) SPRITE0_DATA, p_sprites[0][5], sizeof (p_sprites[0][0]));
+      memcpy ((void*) SPRITE0_DATA, p_sprites[player][5], sizeof (p_sprites[player][0]));
       break;
     case 5:
-      memcpy ((void*) SPRITE0_DATA, p_sprites[0][4], sizeof (p_sprites[0][2]));
+      memcpy ((void*) SPRITE0_DATA, p_sprites[player][4], sizeof (p_sprites[player][2]));
       break;
     case 6:
-      memcpy ((void*) SPRITE0_DATA, p_sprites[0][3], sizeof (p_sprites[0][0]));
+      memcpy ((void*) SPRITE0_DATA, p_sprites[player][3], sizeof (p_sprites[player][0]));
       break;
   }
   ++p1_pick_step;
@@ -416,7 +418,7 @@ int main( void )
   unsigned char sRunning =1;
   unsigned char a;
 
-  memcpy ((void*) SPRITE0_DATA, p_sprites[0][1], sizeof (p_sprites[0][1]));
+  memcpy ((void*) SPRITE0_DATA, p_sprites[player][1], sizeof (p_sprites[player][1]));
   memcpy ((void*) SPRITE1_DATA, p_sprites[1][1], sizeof (p_sprites[1][1]));
 
   memcpy ((void*) SPRITE2_DATA, sb_snowball, sizeof (sb_snowball));
