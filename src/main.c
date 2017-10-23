@@ -53,13 +53,13 @@
 #define SPRITE2_DATA    0x03C0
 #define SPRITE2_PTR     0x07FA
 
-/*#define SPRITE3_DATA    0x0340
-#define SPRITE3_PTR     0x07F
+#define SPRITE3_DATA    0x0400
+#define SPRITE3_PTR     0x07FB
 
-#define SPRITE4_DATA    0x0340
-#define SPRITE4_PTR     0x07F
+#define SPRITE4_DATA    0x0440
+#define SPRITE4_PTR     0x07FC
 
-#define SPRITE5_DATA    0x0340
+/*#define SPRITE5_DATA    0x0340
 #define SPRITE5_PTR     0x07F
 
 #define SPRITE6_DATA    0x0340
@@ -74,6 +74,9 @@
 #define DRIVER          "c64-ptvjoy.joy"
 
 int (*SPRITE_DATA);
+
+unsigned int x_pos;
+unsigned int y_pos;
 
 unsigned char p1_step=1;
 unsigned char p_throw_step=0;
@@ -100,7 +103,7 @@ static char shapes[7][4] = {
 void p_up()
 {
 
-  VIC.spr0_y = --VIC.spr0_y;
+  y_pos = --y_pos;
 
   if(p1_vec!=0){
     p1_vec=0;
@@ -130,7 +133,7 @@ void p_up()
 void p_down()
 {
 
-  VIC.spr0_y = ++VIC.spr0_y;
+  y_pos = ++y_pos;
   
   if(p1_vec!=1){
     p1_vec=1;
@@ -161,7 +164,7 @@ void p_down()
 void p_left()
 {
 
-  VIC.spr0_x = --VIC.spr0_x;
+  x_pos = --x_pos;
   
   if(p1_vec!=2){
     p1_vec=2;
@@ -190,7 +193,7 @@ void p_left()
 void p_right()
 {
 
-  VIC.spr0_x = ++VIC.spr0_x;
+  x_pos = ++x_pos;
 
   if(p1_vec!=3){
     p1_vec=3;
@@ -244,7 +247,6 @@ void p_throw()
   }
 
   if(p_throw_trig == 20){
-    printf("%d",p_throw_step);
     switch( p_throw_step )
     {
       case 0:
@@ -318,8 +320,6 @@ void p_pickup()
 void p_move()
 {
 
-  joystat = joy_read (player);
-
   //  j2=joy_read (JOY_2);
   if(JOY_BTN_1 (joystat))
   {
@@ -335,60 +335,60 @@ void p_move()
 
   else if(JOY_DOWN (joystat) && JOY_LEFT (joystat))
   {
-    if(VIC.spr0_y < heightMax && VIC.spr0_x > widthMin)
+    if(y_pos < heightMax && x_pos > widthMin)
     {
         p_left();
-        VIC.spr0_y = ++VIC.spr0_y;
+        y_pos = ++y_pos;
     }
   }
   else if(JOY_DOWN (joystat) && JOY_RIGHT (joystat))
   {
-    if(VIC.spr0_y < heightMax && VIC.spr0_x < widthMax)
+    if(y_pos < heightMax && x_pos < widthMax)
     {
         p_right();
-        VIC.spr0_y = ++VIC.spr0_y;
+        y_pos = ++y_pos;
     }
   }
   else if(JOY_UP (joystat) && JOY_RIGHT (joystat))
   {
-    if(VIC.spr0_y > heightMin && VIC.spr0_x < widthMax)
+    if(y_pos > heightMin && x_pos < widthMax)
     {
         p_right();
-        VIC.spr0_y = --VIC.spr0_y;
+        y_pos = --y_pos;
     }
   }
   else if(JOY_UP (joystat) && JOY_LEFT (joystat))
   {
-    if(VIC.spr0_y > heightMin && VIC.spr0_x > widthMin)
+    if(y_pos > heightMin && x_pos > widthMin)
     {
         p_left();
-        VIC.spr0_y = --VIC.spr0_y;
+        y_pos = --y_pos;
     }
   }
 
   else if(JOY_DOWN (joystat))
   {
-    if(VIC.spr0_y < heightMax){
+    if(y_pos < heightMax){
         p_down();
     }
   }
 
   else if(JOY_UP (joystat))
   {
-    if(VIC.spr0_y > heightMin){
+    if(y_pos > heightMin){
        p_up();
     }
   }
 
   else if(JOY_LEFT (joystat))
   {
-    if(VIC.spr0_x > widthMin){
+    if(x_pos > widthMin){
       p_left();
     }
   }
   else if(JOY_RIGHT (joystat))
   {
-    if(VIC.spr0_x < widthMax){
+    if(x_pos < widthMax){
       p_right();
     }
   }
@@ -416,10 +416,13 @@ int main( void )
   unsigned char sRunning =1;
   unsigned char a;
 
-  memcpy ((void*) SPRITE0_DATA, p_sprites[player][1], sizeof (p_sprites[player][1]));
+  memcpy ((void*) SPRITE0_DATA, p_sprites[0][1], sizeof (p_sprites[0][1]));
   memcpy ((void*) SPRITE1_DATA, p_sprites[1][1], sizeof (p_sprites[1][1]));
+  memcpy ((void*) SPRITE2_DATA, p_sprites[2][1], sizeof (p_sprites[2][1]));
+  memcpy ((void*) SPRITE3_DATA, p_sprites[3][1], sizeof (p_sprites[3][1]));
 
-  memcpy ((void*) SPRITE2_DATA, sb_snowball, sizeof (sb_snowball));
+
+  memcpy ((void*) SPRITE4_DATA, sb_snowball, sizeof (sb_snowball));
 
   /* Load and install the mouse driver */
   joy_load_driver (DRIVER);
@@ -427,6 +430,9 @@ int main( void )
     *(unsigned char*)SPRITE0_PTR = SPRITE0_DATA / 64;
     *(unsigned char*)SPRITE1_PTR = SPRITE1_DATA / 64;
     *(unsigned char*)SPRITE2_PTR = SPRITE2_DATA / 64;
+    *(unsigned char*)SPRITE3_PTR = SPRITE3_DATA / 64;
+
+    *(unsigned char*)SPRITE4_PTR = SPRITE4_DATA / 64;
 
   clrscr ();
   bgcolor (1);
@@ -436,6 +442,9 @@ int main( void )
   VIC.spr_mcolor = 1;
   VIC.spr_mcolor =0x3; 
   VIC.spr_mcolor =0x7;
+  VIC.spr_mcolor =0xf;
+       
+  VIC.spr_mcolor =0x1f;
 
   VIC.spr_mcolor0 = COLOR_BLACK;
   VIC.spr_mcolor1 = COLOR_YELLOW;
@@ -444,13 +453,21 @@ int main( void )
   VIC.spr0_color = COLOR_RED;
   //Player 2 colour:
   VIC.spr1_color = COLOR_BLUE;
+  //Player 2 colour:
+  VIC.spr2_color = COLOR_GREEN;
+  //Player 2 colour:
+  VIC.spr3_color = COLOR_PURPLE;
+
 
   //Snowball colour:
-  VIC.spr2_color = 12;
+  VIC.spr4_color = 12;
 
   VIC.spr_ena=0x1;
   VIC.spr_ena=0x3;
   VIC.spr_ena=0x7;
+  VIC.spr_ena=0xf;
+
+  VIC.spr_ena=0x1f;
 
   VIC.spr0_x = 100;
   VIC.spr0_y = 100;
@@ -461,25 +478,57 @@ int main( void )
   VIC.spr2_x = 120;
   VIC.spr2_y = 120;
 
-  printf("Snowball Fighters");
+  VIC.spr3_x = 130;
+  VIC.spr3_y = 130;
+
+  VIC.spr4_x = 140;
+  VIC.spr4_y = 140;
+
   while( sRunning )
   {
 
     SPRITE_DATA = SPRITE0_DATA;
     player = 0;
+    x_pos = VIC.spr0_x;
+    y_pos = VIC.spr0_y;
+    joystat = joy_read (0);
     p_move();
+    VIC.spr0_x = x_pos;
+    VIC.spr0_y = y_pos;
+
 
 
     SPRITE_DATA = SPRITE1_DATA;
-    player = 1
+    player = 1;
+    x_pos = VIC.spr1_x;
+    y_pos = VIC.spr1_y;
+    joystat = joy_read (1);
     p_move();
+    VIC.spr1_x = x_pos;
+    VIC.spr1_y = y_pos;
 
-    //p2_move();
-    //memcpy ((void*) SPRITE1_DATA, p_sprites[1][1], sizeof (p_sprites[1][1]));
-    //VIC.spr1_x = VIC.spr0_x-30;
-    //VIC.spr1_y = VIC.spr0_y-30;
-    
-    //joy_read (3);
+
+
+    SPRITE_DATA = SPRITE2_DATA;
+    player = 2;
+    x_pos = VIC.spr2_x;
+    y_pos = VIC.spr2_y;
+    joystat = joy_read (2);
+    p_move();
+    VIC.spr2_x = x_pos;
+    VIC.spr2_y = y_pos;
+
+
+    SPRITE_DATA = SPRITE3_DATA;
+    player = 3;
+    x_pos = VIC.spr3_x;
+    y_pos = VIC.spr3_y;
+    joystat = joy_read (3);
+    p_move();
+    VIC.spr3_x = x_pos;
+    VIC.spr3_y = y_pos;
+
+
 
     for(a=0;a<100;a++){/*test*/};
   }
