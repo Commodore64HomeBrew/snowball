@@ -69,6 +69,13 @@
 #define SPRITE7_PTR     0x07F
 */
 
+//#define SPRITE0_DATA    0x0801
+//#define SPRITE1_DATA    0x0841
+//#define SPRITE2_DATA    0x0881
+//#define SPRITE3_DATA    0x08C1
+//#define SPRITE4_DATA    0x0901
+
+
 #define step_frame 10
 
 #define DRIVER          "c64-ptvjoy.joy"
@@ -78,12 +85,12 @@ int (*SPRITE_DATA);
 unsigned int x_pos;
 unsigned int y_pos;
 
-unsigned char p1_step=1;
+unsigned char p_step=1;
 unsigned char p_throw_step=0;
-unsigned char p1_pick_step=0;
-unsigned char p1_snow=0;
-unsigned char p1_vec=0;
-unsigned char p1_trigger=0;
+unsigned char p_pick_step=0;
+unsigned char p_snow=0;
+unsigned char p_vec=0;
+unsigned char p_trigger=0;
 unsigned char p_throw_trig=0;
 
 unsigned char player =0;
@@ -105,14 +112,14 @@ void p_up()
 
   y_pos = --y_pos;
 
-  if(p1_vec!=0){
-    p1_vec=0;
-    p1_trigger=step_frame;
+  if(p_vec!=0){
+    p_vec=0;
+    p_trigger=step_frame;
   }
 
-  if(p1_trigger == step_frame){
+  if(p_trigger == step_frame){
 
-    switch( p1_step )
+    switch( p_step )
     {
       //Move cursor down
       case 0:
@@ -122,11 +129,11 @@ void p_up()
         memcpy ((void*) SPRITE_DATA, p_sprites[player][37], sizeof (p_sprites[player][37]));
         break;
     }
-    ++p1_step;
-    if(p1_step>1){p1_step=0;}
+    ++p_step;
+    if(p_step>1){p_step=0;}
   }
-  ++p1_trigger;
-  if(p1_trigger>step_frame){p1_trigger=0;}
+  ++p_trigger;
+  if(p_trigger>step_frame){p_trigger=0;}
 
 }
 
@@ -135,14 +142,14 @@ void p_down()
 
   y_pos = ++y_pos;
   
-  if(p1_vec!=1){
-    p1_vec=1;
-    p1_trigger=step_frame;
+  if(p_vec!=1){
+    p_vec=1;
+    p_trigger=step_frame;
   }
 
-  if(p1_trigger == step_frame){
+  if(p_trigger == step_frame){
 
-    switch( p1_step )
+    switch( p_step )
     {
       //Move cursor down
       case 0:
@@ -152,11 +159,11 @@ void p_down()
         memcpy ((void*) SPRITE_DATA, p_sprites[player][34], sizeof (p_sprites[player][34]));
         break;
     }
-    ++p1_step;
-    if(p1_step>1){p1_step=0;}
+    ++p_step;
+    if(p_step>1){p_step=0;}
   }
-  ++p1_trigger;
-  if(p1_trigger>step_frame){p1_trigger=0;}
+  ++p_trigger;
+  if(p_trigger>step_frame){p_trigger=0;}
 
 }
 
@@ -166,14 +173,14 @@ void p_left()
 
   x_pos = --x_pos;
   
-  if(p1_vec!=2){
-    p1_vec=2;
-    p1_trigger=step_frame;
+  if(p_vec!=2){
+    p_vec=2;
+    p_trigger=step_frame;
   }
 
-  if(p1_trigger == step_frame){
+  if(p_trigger == step_frame){
 
-    switch( p1_step )
+    switch( p_step )
     {
       case 0:
         memcpy ((void*) SPRITE_DATA, p_sprites[player][16], sizeof (p_sprites[player][16]));
@@ -183,11 +190,11 @@ void p_left()
         break;
     }
 
-    ++p1_step;
-    if(p1_step>1){p1_step=0;}
+    ++p_step;
+    if(p_step>1){p_step=0;}
   }
-  ++p1_trigger;
-  if(p1_trigger>step_frame){p1_trigger=0;}
+  ++p_trigger;
+  if(p_trigger>step_frame){p_trigger=0;}
 }
 
 void p_right()
@@ -195,14 +202,14 @@ void p_right()
 
   x_pos = ++x_pos;
 
-  if(p1_vec!=3){
-    p1_vec=3;
-    p1_trigger=step_frame;
+  if(p_vec!=3){
+    p_vec=3;
+    p_trigger=step_frame;
   }
 
-  if(p1_trigger == step_frame){
+  if(p_trigger == step_frame){
 
-    switch( p1_step )
+    switch( p_step )
     {
       case 0:
         memcpy ((void*) SPRITE_DATA, p_sprites[player][0], sizeof (p_sprites[player][0]));
@@ -212,16 +219,16 @@ void p_right()
         break;
 
     }
-    ++p1_step;
-    if(p1_step>1){p1_step=0;}
+    ++p_step;
+    if(p_step>1){p_step=0;}
   }
-  ++p1_trigger;
-  if(p1_trigger>step_frame){p1_trigger=0;}
+  ++p_trigger;
+  if(p_trigger>step_frame){p_trigger=0;}
 }
 
 void p_still()
 {
-  switch( p1_vec )
+  switch( p_vec )
   {
     case 0:
       memcpy ((void*) SPRITE_DATA, p_sprites[player][35], sizeof (p_sprites[player][35]));
@@ -241,8 +248,8 @@ void p_still()
 void p_throw()
 {
 
-  if(p1_vec!=3){
-    p1_vec=3;
+  if(p_vec!=3){
+    p_vec=3;
     p_throw_trig=20;
   }
 
@@ -275,7 +282,7 @@ void p_throw()
     if(p_throw_step>6)
     {
       p_throw_step=0;
-      p1_snow=0;
+      p_snow=0;
     }
   }
   ++p_throw_trig;
@@ -284,7 +291,7 @@ void p_throw()
 
 void p_pickup()
 {
-  switch( p1_pick_step )
+  switch( p_pick_step )
   {
     //Move cursor down
     case 0:
@@ -309,11 +316,11 @@ void p_pickup()
       memcpy ((void*) SPRITE_DATA, p_sprites[player][3], sizeof (p_sprites[player][0]));
       break;
   }
-  ++p1_pick_step;
-  if(p1_pick_step>6)
+  ++p_pick_step;
+  if(p_pick_step>6)
     {
-      p1_pick_step=0;
-      p1_snow=1;
+      p_pick_step=0;
+      p_snow=1;
     }
 }
 
@@ -401,7 +408,7 @@ void p_move()
   {
     p_throw();
   }
-  else if(p1_pick_step>0)
+  else if(p_pick_step>0)
   {
     p_pickup();
   } 
@@ -415,14 +422,22 @@ int main( void )
 
   unsigned char sRunning =1;
   unsigned char a;
+  unsigned char p0_step, p0_throw_step, p0_pick_step, p0_snow, p0_vec, p0_trigger, p0_throw_trig;
+  unsigned char p1_step, p1_throw_step, p1_pick_step, p1_snow, p1_vec, p1_trigger, p1_throw_trig;
+  unsigned char p2_step, p2_throw_step, p2_pick_step, p2_snow, p2_vec, p2_trigger, p2_throw_trig;
+  unsigned char p3_step, p3_throw_step, p3_pick_step, p3_snow, p3_vec, p3_trigger, p3_throw_trig;
 
-  memcpy ((void*) SPRITE0_DATA, p_sprites[0][1], sizeof (p_sprites[0][1]));
-  memcpy ((void*) SPRITE1_DATA, p_sprites[1][1], sizeof (p_sprites[1][1]));
-  memcpy ((void*) SPRITE2_DATA, p_sprites[2][1], sizeof (p_sprites[2][1]));
-  memcpy ((void*) SPRITE3_DATA, p_sprites[3][1], sizeof (p_sprites[3][1]));
 
 
-  memcpy ((void*) SPRITE4_DATA, sb_snowball, sizeof (sb_snowball));
+
+
+  memcpy ((void*) SPRITE0_DATA, p_sprites[0][1], 64);
+  memcpy ((void*) SPRITE1_DATA, p_sprites[1][1], 64);
+  memcpy ((void*) SPRITE2_DATA, p_sprites[2][1], 64);
+  memcpy ((void*) SPRITE3_DATA, p_sprites[3][1], 64);
+
+
+  memcpy ((void*) SPRITE4_DATA, sb_snowball, 64);
 
   /* Load and install the mouse driver */
   joy_load_driver (DRIVER);
@@ -436,7 +451,8 @@ int main( void )
 
   clrscr ();
   bgcolor (1);
-  bordercolor (1); 
+  bordercolor (1);
+  textcolor (1);
 
   //joy_install (DRIVER);
   VIC.spr_mcolor = 1;
@@ -467,7 +483,7 @@ int main( void )
   VIC.spr_ena=0x7;
   VIC.spr_ena=0xf;
 
-  VIC.spr_ena=0x1f;
+  //VIC.spr_ena=0x1f;
 
   VIC.spr0_x = 100;
   VIC.spr0_y = 100;
@@ -491,10 +507,24 @@ int main( void )
     player = 0;
     x_pos = VIC.spr0_x;
     y_pos = VIC.spr0_y;
+    p_step = p0_step;
+    p_throw_step = p0_throw_step;
+    p_pick_step = p0_pick_step;
+    p_snow = p0_snow;
+    p_vec = p0_vec;
+    p_trigger = p0_trigger;
+    p_throw_trig = p0_throw_trig;
     joystat = joy_read (0);
     p_move();
     VIC.spr0_x = x_pos;
     VIC.spr0_y = y_pos;
+    p0_step = p_step;
+    p0_throw_step = p_throw_step;
+    p0_pick_step = p_pick_step;
+    p0_snow = p_snow;
+    p0_vec = p_vec;
+    p0_trigger = p_trigger;
+    p0_throw_trig = p_throw_trig;
 
 
 
@@ -502,35 +532,74 @@ int main( void )
     player = 1;
     x_pos = VIC.spr1_x;
     y_pos = VIC.spr1_y;
+    p_step = p1_step;
+    p_throw_step = p1_throw_step;
+    p_pick_step = p1_pick_step;
+    p_snow = p1_snow;
+    p_vec = p1_vec;
+    p_trigger = p1_trigger;
+    p_throw_trig = p1_throw_trig;
     joystat = joy_read (1);
     p_move();
     VIC.spr1_x = x_pos;
     VIC.spr1_y = y_pos;
-
+    p1_step = p_step;
+    p1_throw_step = p_throw_step;
+    p1_pick_step = p_pick_step;
+    p1_snow = p_snow;
+    p1_vec = p_vec;
+    p1_trigger = p_trigger;
+    p1_throw_trig = p_throw_trig;
 
 
     SPRITE_DATA = SPRITE2_DATA;
     player = 2;
     x_pos = VIC.spr2_x;
     y_pos = VIC.spr2_y;
+    p_step = p2_step;
+    p_throw_step = p2_throw_step;
+    p_pick_step = p2_pick_step;
+    p_snow = p2_snow;
+    p_vec = p2_vec;
+    p_trigger = p2_trigger;
+    p_throw_trig = p2_throw_trig;
     joystat = joy_read (2);
     p_move();
     VIC.spr2_x = x_pos;
     VIC.spr2_y = y_pos;
-
+    p2_step = p_step;
+    p2_throw_step = p_throw_step;
+    p2_pick_step = p_pick_step;
+    p2_snow = p_snow;
+    p2_vec = p_vec;
+    p2_trigger = p_trigger;
+    p2_throw_trig = p_throw_trig;
 
     SPRITE_DATA = SPRITE3_DATA;
     player = 3;
     x_pos = VIC.spr3_x;
     y_pos = VIC.spr3_y;
+    p_step = p3_step;
+    p_throw_step = p3_throw_step;
+    p_pick_step = p3_pick_step;
+    p_snow = p3_snow;
+    p_vec = p3_vec;
+    p_trigger = p3_trigger;
+    p_throw_trig = p3_throw_trig;
     joystat = joy_read (3);
     p_move();
     VIC.spr3_x = x_pos;
     VIC.spr3_y = y_pos;
+    p3_step = p_step;
+    p3_throw_step = p_throw_step;
+    p3_pick_step = p_pick_step;
+    p3_snow = p_snow;
+    p3_vec = p_vec;
+    p3_trigger = p_trigger;
+    p3_throw_trig = p_throw_trig;
 
 
-
-    for(a=0;a<100;a++){/*test*/};
+    //for(a=0;a<100;a++){/*test*/};
   }
 
   return(0);
