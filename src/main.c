@@ -165,15 +165,10 @@ void b_move()
 {
   //memcpy ((void*) SPRITE4_DATA, sb_snowball, 64);
 
-  if(b_active==1){
-    x_ball = x_pos;
-    y_ball = y_pos;
-    b_active=2;
-  }
-  else if(b_active==2)
+  if(b_active==2)
   {
     if(b_vec==2){x_ball=x_ball-2;}
-    if(b_vec==3){x_ball=x_ball+2;}
+    else if(b_vec==3){x_ball=x_ball+2;}
 
     if(x_ball<widthMin || x_ball>widthMax){
       x_ball=1;
@@ -181,7 +176,11 @@ void b_move()
       b_active=0;
     }
   }
-
+  else if(b_active==1){
+    x_ball = x_pos;
+    y_ball = y_pos;
+    b_active=2;
+  }
 
 }
 
@@ -485,6 +484,7 @@ void p_pickup_left()
 void p_move()
 {
 
+  joystat = joy_read (player);
 
   if(p_pick_step>0)
   {
@@ -731,137 +731,78 @@ int main( void )
   while( sRunning )
   {
 
-    SPRITE_DATA = SPRITE0_DATA;
+
     player = 0;
-    x_pos = VIC.spr0_x;
-    y_pos = VIC.spr0_y;
-    x_ball = VIC.spr4_x;
-    y_ball = VIC.spr4_y;
-    b_active = b0_active;
-    b_vec = b0_vec;
-    p_step = p0_step;
-    p_throw_step = p0_throw_step;
-    p_pick_step = p0_pick_step;
-    p_snow = p0_snow;
-    p_vec = p0_vec;
-    p_trigger = p0_trigger;
-    p_throw_trig = p0_throw_trig;
-    joystat = joy_read (0);
+    SPRITE_DATA = SPRITE0_DATA;
+    x_pos = &VIC.spr0_x;
+    y_pos = &VIC.spr0_y;
+    x_ball = &VIC.spr4_x;
+    y_ball = &VIC.spr4_y;
+    b_active = &b0_active;
+    b_vec = &b0_vec;
+    p_step = &p0_step;
+    p_throw_step = &p0_throw_step;
+    p_pick_step = &p0_pick_step;
+    p_snow = &p0_snow;
+    p_vec = &p0_vec;
+    p_trigger = &p0_trigger;
+    p_throw_trig = &p0_throw_trig;
     p_move();
-    VIC.spr0_x = x_pos;
-    VIC.spr0_y = y_pos;
-    VIC.spr4_x = x_ball;
-    VIC.spr4_y = y_ball;
-    b0_vec = b_vec;
-    b0_active = b_active;
-    p0_step = p_step;
-    p0_throw_step = p_throw_step;
-    p0_pick_step = p_pick_step;
-    p0_snow = p_snow;
-    p0_vec = p_vec;
-    p0_trigger = p_trigger;
-    p0_throw_trig = p_throw_trig;
 
 
-
-    SPRITE_DATA = SPRITE1_DATA;
     player = 1;
-    x_pos = VIC.spr1_x;
-    y_pos = VIC.spr1_y;
-    x_ball = VIC.spr5_x;
-    y_ball = VIC.spr5_y;
-    b_active = b1_active;
-    b_vec = b1_vec;
-    p_step = p1_step;
-    p_throw_step = p1_throw_step;
-    p_pick_step = p1_pick_step;
-    p_snow = p1_snow;
-    p_vec = p1_vec;
-    p_trigger = p1_trigger;
-    p_throw_trig = p1_throw_trig;
-    joystat = joy_read (1);
+    SPRITE_DATA = SPRITE1_DATA;
+    x_pos = &VIC.spr1_x;
+    y_pos = &VIC.spr1_y;
+    x_ball = &VIC.spr5_x;
+    y_ball = &VIC.spr5_y;
+    b_active = &b1_active;
+    b_vec = &b1_vec;
+    p_step = &p1_step;
+    p_throw_step = &p1_throw_step;
+    p_pick_step = &p1_pick_step;
+    p_snow = &p1_snow;
+    p_vec = &p1_vec;
+    p_trigger = &p1_trigger;
+    p_throw_trig = &p1_throw_trig;
     p_move();
-    VIC.spr1_x = x_pos;
-    VIC.spr1_y = y_pos;
-    VIC.spr5_x = x_ball;
-    VIC.spr5_y = y_ball;
-    b1_active = b_active;
-    b1_vec = b_vec;
-    p1_step = p_step;
-    p1_throw_step = p_throw_step;
-    p1_pick_step = p_pick_step;
-    p1_snow = p_snow;
-    p1_vec = p_vec;
-    p1_trigger = p_trigger;
-    p1_throw_trig = p_throw_trig;
 
-    SPRITE_DATA = SPRITE2_DATA;
+
     player = 2;
-    x_pos = VIC.spr2_x;
-    y_pos = VIC.spr2_y;
-    x_ball = VIC.spr6_x;
-    y_ball = VIC.spr6_y;
-    b_active = b2_active;
-    b_vec = b2_vec;
-    p_step = p2_step;
-    p_throw_step = p2_throw_step;
-    p_pick_step = p2_pick_step;
-    p_snow = p2_snow;
-    p_vec = p2_vec;
-    p_trigger = p2_trigger;
-    p_throw_trig = p2_throw_trig;
-    joystat = joy_read (2);
+    SPRITE_DATA = SPRITE2_DATA;
+    x_pos = &VIC.spr2_x;
+    y_pos = &VIC.spr2_y;
+    x_ball = &VIC.spr6_x;
+    y_ball = &VIC.spr6_y;
+    b_active = &b2_active;
+    b_vec = &b2_vec;
+    p_step = &p2_step;
+    p_throw_step = &p2_throw_step;
+    p_pick_step = &p2_pick_step;
+    p_snow = &p2_snow;
+    p_vec = &p2_vec;
+    p_trigger = &p2_trigger;
+    p_throw_trig = &p2_throw_trig;
     p_move();
-    VIC.spr2_x = x_pos;
-    VIC.spr2_y = y_pos;
-    VIC.spr6_x = x_ball;
-    VIC.spr6_y = y_ball;
-    b2_active = b_active;
-    b2_vec = b_vec;
-    p2_step = p_step;
-    p2_throw_step = p_throw_step;
-    p2_pick_step = p_pick_step;
-    p2_snow = p_snow;
-    p2_vec = p_vec;
-    p2_trigger = p_trigger;
-    p2_throw_trig = p_throw_trig;
 
 
-
-
-    SPRITE_DATA = SPRITE3_DATA;
     player = 3;
-    x_pos = VIC.spr3_x;
-    y_pos = VIC.spr3_y;
-    x_ball = VIC.spr7_x;
-    y_ball = VIC.spr7_y;
-    b_active = b3_active;
-    b_vec = b3_vec;
-    p_step = p3_step;
-    p_throw_step = p3_throw_step;
-    p_pick_step = p3_pick_step;
-    p_snow = p3_snow;
-    p_vec = p3_vec;
-    p_trigger = p3_trigger;
-    p_throw_trig = p3_throw_trig;
-    joystat = joy_read (3);
+    SPRITE_DATA = SPRITE3_DATA;
+    x_pos = &VIC.spr3_x;
+    y_pos = &VIC.spr3_y;
+    x_ball = &VIC.spr7_x;
+    y_ball = &VIC.spr7_y;
+    b_active = &b3_active;
+    b_vec = &b3_vec;
+    p_step = &p3_step;
+    p_throw_step = &p3_throw_step;
+    p_pick_step = &p3_pick_step;
+    p_snow = &p3_snow;
+    p_vec = &p3_vec;
+    p_trigger = &p3_trigger;
+    p_throw_trig = &p3_throw_trig;
     p_move();
-    VIC.spr3_x = x_pos;
-    VIC.spr3_y = y_pos;
-    VIC.spr7_x = x_ball;
-    VIC.spr7_y = y_ball;
-    b3_active = b_active;
-    b3_vec = b_vec;
-    p3_step = p_step;
-    p3_throw_step = p_throw_step;
-    p3_pick_step = p_pick_step;
-    p3_snow = p_snow;
-    p3_vec = p_vec;
-    p3_trigger = p_trigger;
-    p3_throw_trig = p_throw_trig;
 
-
-    //if(spr_coll)
 
     //for(a=0;a<100;a++){/*test*/};
 
