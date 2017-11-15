@@ -18,6 +18,7 @@
 #include <peekpoke.h>
 
 #include "spritedata.h"
+#include "vickers.h"
 
 #define PETSCII_STOP  0x03
 //#define PETSCII_RUN   0x83
@@ -44,30 +45,53 @@
 #define widthMin 24 
 #define widthMax 254
 
+// ** My VIC Memory Map ** // 
+// 0x0000 - VRAM Map (1st half only) // 
+// 0x0400 - (unused) 
+// 0x0800 - VRAM Tileset 
+// 0x1000 - ROM Upper Case 
+// 0x1800 - ROM Lower Case 
+// 0x2000 - Sprites (128 total, 63+1 bytes each) 
+// 0x2800 - Sprites 
+// 0x3000 - Sprites 
+// 0x3800 - Sprites 
+
+//#define VICBase        (0x8000) 
+//#define ScreenBase    (VICBase+(0x0)) 
+//#define CharBase        (VICBase+(0x800)) 
+//#define SpriteBase    (VICBase+(0x2000)) 
+
+
+
+
 #define SPRITE0_DATA    0x0340
+//#define SPRITE0_DATA    (MySpriteBase)
 #define SPRITE0_PTR     0x07F8
 
 #define SPRITE1_DATA    0x0380
+//#define SPRITE1_DATA    (MySpriteBase+(0x80))
 #define SPRITE1_PTR     0x07F9
 
 #define SPRITE2_DATA    0x03C0
+//#define SPRITE2_DATA    (MySpriteBase+(0xC0))
 #define SPRITE2_PTR     0x07FA
 
 #define SPRITE3_DATA    0x0400
+//#define SPRITE3_DATA    (MySpriteBase+(0x100))
 #define SPRITE3_PTR     0x07FB
 
 #define SPRITE4_DATA    0x0440
+//#define SPRITE4_DATA    (MySpriteBase+(0x140))
 #define SPRITE4_PTR     0x07FC
 
-/*#define SPRITE5_DATA    0x0340
-#define SPRITE5_PTR     0x07F
+#define SPRITE5_DATA    0x0480
+#define SPRITE5_PTR     0x07FD
 
-#define SPRITE6_DATA    0x0340
-#define SPRITE6_PTR     0x07F
+#define SPRITE6_DATA    0x04C0
+#define SPRITE6_PTR     0x07FE
 
-#define SPRITE7_DATA    0x0340
-#define SPRITE7_PTR     0x07F
-*/
+#define SPRITE7_DATA    0x0500
+#define SPRITE7_PTR     0x07FF
 
 //#define SPRITE0_DATA    0x0801
 //#define SPRITE1_DATA    0x0841
@@ -79,6 +103,9 @@
 #define step_frame 10
 
 #define DRIVER          "c64-ptvjoy.joy"
+
+extern char SpriteColor[2]; 
+extern char SpriteData[]; 
 
 int (*SPRITE_DATA);
 
@@ -93,8 +120,35 @@ unsigned char p_vec=0;
 unsigned char p_trigger=0;
 unsigned char p_throw_trig=0;
 
+unsigned int x_ball;
+unsigned int y_ball;
+
+unsigned char b_vec=0;
+unsigned char b_active=0;
+
 unsigned char player =0;
 unsigned char joystat;
+
+extern char Music[]; 
+
+extern void SIDInit(); 
+extern void SIDStep(); 
+/* 
+//#define SIDPlay() { 
+void SIDInit( const char Song ) { 
+    __asm__("lda #0"); 
+    __asm__("tax"); 
+    __asm__("tay"); 
+    __asm__("jsr #$1000"); 
+} 
+//_Music+$00");//,Music+0x7C+2);//$400");//%w", 0x40D);//0x1000); 
+//} 
+
+void SIDStep() { 
+    __asm__("jsr #$1012");//, 0x1013);// 0x1006); 
+}*/ 
+
+
 
 static char shapes[7][4] = {
   {0,1,40,41},   //square
@@ -106,6 +160,30 @@ static char shapes[7][4] = {
   {0,40,41,42}   //L4
 };
 
+
+void b_move()
+{
+  //memcpy ((void*) SPRITE4_DATA, sb_snowball, 64);
+
+  if(b_active==1){
+    x_ball = x_pos;
+    y_ball = y_pos;
+    b_active=2;
+  }
+  else if(b_active==2)
+  {
+    if(b_vec==2){x_ball=x_ball-2;}
+    if(b_vec==3){x_ball=x_ball+2;}
+
+    if(x_ball<widthMin || x_ball>widthMax){
+      x_ball=1;
+      y_ball=1;
+      b_active=0;
+    }
+  }
+
+
+}
 
 void p_up()
 {
@@ -123,10 +201,10 @@ void p_up()
     {
       //Move cursor down
       case 0:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][36], sizeof (p_sprites[player][36]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][36], 64);
         break;
       case 1:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][37], sizeof (p_sprites[player][37]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][37], 64);
         break;
     }
     ++p_step;
@@ -153,10 +231,10 @@ void p_down()
     {
       //Move cursor down
       case 0:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][33], sizeof (p_sprites[player][33]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][33], 64);
         break;
       case 1:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][34], sizeof (p_sprites[player][34]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][34], 64);
         break;
     }
     ++p_step;
@@ -183,10 +261,10 @@ void p_left()
     switch( p_step )
     {
       case 0:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][16], sizeof (p_sprites[player][16]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][16], 64);
         break;
       case 1:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][18], sizeof (p_sprites[player][18]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][18], 64);
         break;
     }
 
@@ -212,10 +290,10 @@ void p_right()
     switch( p_step )
     {
       case 0:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][0], sizeof (p_sprites[player][0]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][0], 64);
         break;
       case 1:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][2], sizeof (p_sprites[player][2]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][2], 64);
         break;
 
     }
@@ -231,89 +309,133 @@ void p_still()
   switch( p_vec )
   {
     case 0:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][35], sizeof (p_sprites[player][35]));
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][35], 64);
       break;
     case 1:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][32], sizeof (p_sprites[player][32]));
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][32], 64);
       break;
     case 2:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][17], sizeof (p_sprites[player][17]));
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][17], 64);
       break;
     case 3:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][1], sizeof (p_sprites[player][1]));
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][1], 64);
       break;
   }
 }
 
-void p_throw()
+void p_throw_left()
 {
 
-  if(p_vec!=3){
-    p_vec=3;
-    p_throw_trig=20;
-  }
-
-  if(p_throw_trig == 20){
+  if(p_throw_step<7){
     switch( p_throw_step )
     {
       case 0:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][7], sizeof (p_sprites[player][0]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][23], 64);
         break;
       case 1:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][8], sizeof (p_sprites[player][2]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][24], 64);
         break;
       case 2:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][9], sizeof (p_sprites[player][0]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][25], 64);
         break;
       case 3:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][10], sizeof (p_sprites[player][2]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][26], 64);
         break;
       case 4:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][11], sizeof (p_sprites[player][0]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][27], 64);
+        if(p_snow==1)
+        {
+          b_active=1;
+          b_vec=2;
+          b_move();
+          p_snow=0;
+        }
         break;
       case 5:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][12], sizeof (p_sprites[player][2]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][28], 64);
         break;
       case 6:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][13], sizeof (p_sprites[player][0]));
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][29], 64);
         break;
     }
     ++p_throw_step;
-    if(p_throw_step>6)
-    {
-      p_throw_step=0;
-      p_snow=0;
-    }
   }
-  ++p_throw_trig;
-  if(p_throw_trig>20){p_throw_trig=0;}
+  else
+  {
+    p_throw_step=0;
+    p_snow=0;
+  }
 }
 
-void p_pickup()
+void p_throw_right()
+{
+
+  if(p_throw_step<7){
+    switch( p_throw_step )
+    {
+      case 0:
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][7], 64);
+        break;
+      case 1:
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][8], 64);
+        break;
+      case 2:
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][9], 64);
+        break;
+      case 3:
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][10], 64);
+        break;
+      case 4:
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][11], 64);
+        if(p_snow==1)
+        {
+          b_active=1;
+          b_vec=3;
+          b_move();
+          p_snow=0;
+        }
+        break;
+      case 5:
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][12], 64);
+        break;
+      case 6:
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][13], 64);
+        break;
+    }
+    ++p_throw_step;
+  }
+  else
+  {
+    p_throw_step=0;
+    p_snow=0;
+  }
+}
+
+void p_pickup_right()
 {
   switch( p_pick_step )
   {
     //Move cursor down
     case 0:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][3], sizeof (p_sprites[player][0]));
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][3], 64);
       break;
     case 1:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][4], sizeof (p_sprites[player][2]));
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][4], 64);
       break;
     case 2:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][5], sizeof (p_sprites[player][0]));
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][5], 64);
       break;
     case 3:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][6], sizeof (p_sprites[player][2]));
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][6], 64);
       break;
     case 4:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][5], sizeof (p_sprites[player][0]));
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][5], 64);
       break;
     case 5:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][4], sizeof (p_sprites[player][2]));
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][4], 64);
       break;
     case 6:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][3], sizeof (p_sprites[player][0]));
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][3], 64);
       break;
   }
   ++p_pick_step;
@@ -324,19 +446,73 @@ void p_pickup()
     }
 }
 
+void p_pickup_left()
+{
+  switch( p_pick_step )
+  {
+    //Move cursor down
+    case 0:
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][19], 64);
+      break;
+    case 1:
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][20], 64);
+      break;
+    case 2:
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][21], 64);
+      break;
+    case 3:
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][22], 64);
+      break;
+    case 4:
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][21], 64);
+      break;
+    case 5:
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][20], 64);
+      break;
+    case 6:
+      memcpy ((void*) SPRITE_DATA, p_sprites[player][19], 64);
+      break;
+  }
+  ++p_pick_step;
+  if(p_pick_step>6)
+    {
+      p_pick_step=0;
+      p_snow=1;
+    }
+}
+
+
 void p_move()
 {
+
+
+  if(p_pick_step>0)
+  {
+    if(p_vec==2){p_pickup_left();}
+    else if(p_vec==3){p_pickup_right();}
+  } 
+  else if(p_throw_step>0)
+  {
+    if(p_vec==2){p_throw_left();}
+    else if(p_vec==3){p_throw_right();}
+  }
 
   //  j2=joy_read (JOY_2);
   if(JOY_BTN_1 (joystat))
   {
     if(JOY_DOWN (joystat))
     {
-      p_pickup();
+      if(p_vec==2){p_pickup_left();}
+      else if(p_vec==3){p_pickup_right();}
     }
     else
     {
-      p_throw();
+      if(p_vec==2){
+        p_throw_left();
+      }
+      else if(p_vec==3){
+        p_throw_right();
+      }
     }
   }
 
@@ -404,14 +580,9 @@ void p_move()
     p_still();
   }
 
-  if(p_throw_step>0)
-  {
-    p_throw();
+  if(b_active==2){
+    b_move();
   }
-  else if(p_pick_step>0)
-  {
-    p_pickup();
-  } 
 }
 
 
@@ -420,24 +591,38 @@ void p_move()
 int main( void )
 {
 
+
+
   unsigned char sRunning =1;
   unsigned char a;
   unsigned char p0_step, p0_throw_step, p0_pick_step, p0_snow, p0_vec, p0_trigger, p0_throw_trig;
   unsigned char p1_step, p1_throw_step, p1_pick_step, p1_snow, p1_vec, p1_trigger, p1_throw_trig;
   unsigned char p2_step, p2_throw_step, p2_pick_step, p2_snow, p2_vec, p2_trigger, p2_throw_trig;
   unsigned char p3_step, p3_throw_step, p3_pick_step, p3_snow, p3_vec, p3_trigger, p3_throw_trig;
+  
+  unsigned char b0_active,b1_active,b2_active,b3_active;
+  unsigned char b0_vec,b1_vec,b2_vec,b3_vec;
+
+
+  memset((void*)MyScreenBase,0,1024); 
+  memset((void*)0xd800,1,1024);
+
+  //VICSetAddr( 0, 2 );    // Fun Mode (shows neat garbage) // 
+
+  //memcpy((void*)(0x4000),(void*)&Music,1024*8); 
+
+  //SIDInit(); 
+
+  //memcpy((void*)(MySpriteBase),(void*)&SpriteData,64); 
+
+  //SprInit();
+
+  //VICSetPage( 2 ); 
+  //VICSetAddr( 0, 1 ); 
+  //SprInit();
 
 
 
-
-
-  memcpy ((void*) SPRITE0_DATA, p_sprites[0][1], 64);
-  memcpy ((void*) SPRITE1_DATA, p_sprites[1][1], 64);
-  memcpy ((void*) SPRITE2_DATA, p_sprites[2][1], 64);
-  memcpy ((void*) SPRITE3_DATA, p_sprites[3][1], 64);
-
-
-  memcpy ((void*) SPRITE4_DATA, sb_snowball, 64);
 
   /* Load and install the mouse driver */
   joy_load_driver (DRIVER);
@@ -448,19 +633,20 @@ int main( void )
     *(unsigned char*)SPRITE3_PTR = SPRITE3_DATA / 64;
 
     *(unsigned char*)SPRITE4_PTR = SPRITE4_DATA / 64;
+    *(unsigned char*)SPRITE5_PTR = SPRITE5_DATA / 64;
+    *(unsigned char*)SPRITE6_PTR = SPRITE6_DATA / 64;
+    *(unsigned char*)SPRITE7_PTR = SPRITE7_DATA / 64;
 
   clrscr ();
   bgcolor (1);
   bordercolor (1);
   textcolor (1);
 
-  //joy_install (DRIVER);
-  VIC.spr_mcolor = 1;
-  VIC.spr_mcolor =0x3; 
-  VIC.spr_mcolor =0x7;
-  VIC.spr_mcolor =0xf;
-       
-  VIC.spr_mcolor =0x1f;
+  VIC.bgcolor[0] = 1;
+  VIC.bgcolor[1] = 1;
+  VIC.bgcolor[2] = 1;
+  VIC.bgcolor[3] = 1;
+
 
   VIC.spr_mcolor0 = COLOR_BLACK;
   VIC.spr_mcolor1 = COLOR_YELLOW;
@@ -477,28 +663,70 @@ int main( void )
 
   //Snowball colour:
   VIC.spr4_color = 12;
+  VIC.spr5_color = 12;
+  VIC.spr6_color = 12;
+  VIC.spr7_color = 12;
 
-  VIC.spr_ena=0x1;
-  VIC.spr_ena=0x3;
-  VIC.spr_ena=0x7;
-  VIC.spr_ena=0xf;
 
-  //VIC.spr_ena=0x1f;
+  VIC.spr_mcolor = Spr_EnableBit[0];
+  VIC.spr_mcolor = Spr_EnableBit[1];
+  VIC.spr_mcolor = Spr_EnableBit[2];
+  VIC.spr_mcolor = Spr_EnableBit[3];
 
-  VIC.spr0_x = 100;
-  VIC.spr0_y = 100;
+  VIC.spr_mcolor = Spr_EnableBit[4];
+  VIC.spr_mcolor = Spr_EnableBit[5];
+  VIC.spr_mcolor = Spr_EnableBit[6];
+  VIC.spr_mcolor = Spr_EnableBit[8];
 
-  VIC.spr1_x = 110;
-  VIC.spr1_y = 110;
+  VIC.spr_ena = Spr_EnableBit[0];
+  VIC.spr_ena = Spr_EnableBit[1];
+  VIC.spr_ena = Spr_EnableBit[2];
+  VIC.spr_ena = Spr_EnableBit[3];
 
-  VIC.spr2_x = 120;
-  VIC.spr2_y = 120;
+  VIC.spr_ena = Spr_EnableBit[4];
+  VIC.spr_ena = Spr_EnableBit[5];
+  VIC.spr_ena = Spr_EnableBit[6];
+  VIC.spr_ena = Spr_EnableBit[8];
 
-  VIC.spr3_x = 130;
-  VIC.spr3_y = 130;
 
-  VIC.spr4_x = 140;
-  VIC.spr4_y = 140;
+
+
+  VIC.spr0_x = widthMin;
+  VIC.spr0_y = heightMin;
+
+  VIC.spr1_x = widthMax;
+  VIC.spr1_y = heightMin;
+
+  VIC.spr2_x = widthMin;
+  VIC.spr2_y = heightMax;
+
+  VIC.spr3_x = widthMax;
+  VIC.spr3_y = heightMax;
+
+  VIC.spr4_x = 1;
+  VIC.spr4_y = 1;
+
+  VIC.spr5_x = 1;
+  VIC.spr5_y = 1;
+
+  VIC.spr6_x = 1;
+  VIC.spr6_y = 1;
+
+  VIC.spr7_x = 1;
+  VIC.spr7_y = 1;
+
+
+  memcpy ((void*) SPRITE0_DATA, p_sprites[0][1], 64);
+  memcpy ((void*) SPRITE1_DATA, p_sprites[1][1], 64);
+  memcpy ((void*) SPRITE2_DATA, p_sprites[2][1], 64);
+  memcpy ((void*) SPRITE3_DATA, p_sprites[3][1], 64);
+
+  memcpy ((void*) SPRITE4_DATA, sb_snowball, 64);
+  memcpy ((void*) SPRITE5_DATA, sb_snowball, 64);
+  memcpy ((void*) SPRITE6_DATA, sb_snowball, 64);
+  memcpy ((void*) SPRITE7_DATA, sb_snowball, 64);
+
+
 
   while( sRunning )
   {
@@ -507,6 +735,10 @@ int main( void )
     player = 0;
     x_pos = VIC.spr0_x;
     y_pos = VIC.spr0_y;
+    x_ball = VIC.spr4_x;
+    y_ball = VIC.spr4_y;
+    b_active = b0_active;
+    b_vec = b0_vec;
     p_step = p0_step;
     p_throw_step = p0_throw_step;
     p_pick_step = p0_pick_step;
@@ -518,6 +750,10 @@ int main( void )
     p_move();
     VIC.spr0_x = x_pos;
     VIC.spr0_y = y_pos;
+    VIC.spr4_x = x_ball;
+    VIC.spr4_y = y_ball;
+    b0_vec = b_vec;
+    b0_active = b_active;
     p0_step = p_step;
     p0_throw_step = p_throw_step;
     p0_pick_step = p_pick_step;
@@ -532,6 +768,10 @@ int main( void )
     player = 1;
     x_pos = VIC.spr1_x;
     y_pos = VIC.spr1_y;
+    x_ball = VIC.spr5_x;
+    y_ball = VIC.spr5_y;
+    b_active = b1_active;
+    b_vec = b1_vec;
     p_step = p1_step;
     p_throw_step = p1_throw_step;
     p_pick_step = p1_pick_step;
@@ -543,6 +783,10 @@ int main( void )
     p_move();
     VIC.spr1_x = x_pos;
     VIC.spr1_y = y_pos;
+    VIC.spr5_x = x_ball;
+    VIC.spr5_y = y_ball;
+    b1_active = b_active;
+    b1_vec = b_vec;
     p1_step = p_step;
     p1_throw_step = p_throw_step;
     p1_pick_step = p_pick_step;
@@ -551,11 +795,14 @@ int main( void )
     p1_trigger = p_trigger;
     p1_throw_trig = p_throw_trig;
 
-
     SPRITE_DATA = SPRITE2_DATA;
     player = 2;
     x_pos = VIC.spr2_x;
     y_pos = VIC.spr2_y;
+    x_ball = VIC.spr6_x;
+    y_ball = VIC.spr6_y;
+    b_active = b2_active;
+    b_vec = b2_vec;
     p_step = p2_step;
     p_throw_step = p2_throw_step;
     p_pick_step = p2_pick_step;
@@ -567,6 +814,10 @@ int main( void )
     p_move();
     VIC.spr2_x = x_pos;
     VIC.spr2_y = y_pos;
+    VIC.spr6_x = x_ball;
+    VIC.spr6_y = y_ball;
+    b2_active = b_active;
+    b2_vec = b_vec;
     p2_step = p_step;
     p2_throw_step = p_throw_step;
     p2_pick_step = p_pick_step;
@@ -575,10 +826,17 @@ int main( void )
     p2_trigger = p_trigger;
     p2_throw_trig = p_throw_trig;
 
+
+
+
     SPRITE_DATA = SPRITE3_DATA;
     player = 3;
     x_pos = VIC.spr3_x;
     y_pos = VIC.spr3_y;
+    x_ball = VIC.spr7_x;
+    y_ball = VIC.spr7_y;
+    b_active = b3_active;
+    b_vec = b3_vec;
     p_step = p3_step;
     p_throw_step = p3_throw_step;
     p_pick_step = p3_pick_step;
@@ -590,6 +848,10 @@ int main( void )
     p_move();
     VIC.spr3_x = x_pos;
     VIC.spr3_y = y_pos;
+    VIC.spr7_x = x_ball;
+    VIC.spr7_y = y_ball;
+    b3_active = b_active;
+    b3_vec = b_vec;
     p3_step = p_step;
     p3_throw_step = p_throw_step;
     p3_pick_step = p_pick_step;
@@ -599,7 +861,10 @@ int main( void )
     p3_throw_trig = p_throw_trig;
 
 
+    //if(spr_coll)
+
     //for(a=0;a<100;a++){/*test*/};
+
   }
 
   return(0);
