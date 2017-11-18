@@ -120,7 +120,7 @@ unsigned char *p_pick_step;
 unsigned char *p_snow;
 unsigned char *p_vec;
 unsigned char *p_trigger;
-unsigned char *p_throw_trig;
+unsigned char *p_trigger;
 unsigned char *p_hit;
 unsigned char *p_fall_time;
 
@@ -396,7 +396,7 @@ void p_throw_left()
 
   if(*p_throw_step<7)
   {
-    if(*p_throw_trig == 0)
+    if(*p_trigger == 0)
     {
       switch( *p_throw_step )
       {
@@ -439,8 +439,8 @@ void p_throw_left()
     //*p_snow=0;
     *p_snow=1;
   }
-  ++*p_throw_trig;
-  if(*p_throw_trig>step_frame){*p_throw_trig=0;}
+  ++*p_trigger;
+  if(*p_trigger>step_frame){*p_trigger=0;}
 }
 
 void p_throw_right()
@@ -448,7 +448,7 @@ void p_throw_right()
 
   if(*p_throw_step<7)
   {
-    if(*p_throw_trig == 0)
+    if(*p_trigger == 0)
     {
       switch( *p_throw_step )
       {
@@ -491,8 +491,8 @@ void p_throw_right()
     //*p_snow=0;
     *p_snow=1;
   }
-  ++*p_throw_trig;
-  if(*p_throw_trig>step_frame){*p_throw_trig=0;}
+  ++*p_trigger;
+  if(*p_trigger>step_frame){*p_trigger=0;}
 }
 
 void p_pickup_right()
@@ -599,7 +599,7 @@ void p_move()
     }
     else
     {
-      *p_throw_trig=0;
+      *p_trigger=0;
       if(*p_vec==2){
         p_throw_left();
       }
@@ -839,7 +839,6 @@ int main( void )
     p_snow = &p0_snow;
     p_vec = &p0_vec;
     p_trigger = &p0_trigger;
-    p_throw_trig = &p0_throw_trig;
     p_hit = &p0_hit;
     p_fall_time = &p0_fall_time;
     p_move();
@@ -859,7 +858,6 @@ int main( void )
     p_snow = &p1_snow;
     p_vec = &p1_vec;
     p_trigger = &p1_trigger;
-    p_throw_trig = &p1_throw_trig;
     p_hit = &p1_hit;
     p_fall_time = &p1_fall_time;
     p_move();
@@ -879,7 +877,6 @@ int main( void )
     p_snow = &p2_snow;
     p_vec = &p2_vec;
     p_trigger = &p2_trigger;
-    p_throw_trig = &p2_throw_trig;
     p_hit = &p2_hit;
     p_fall_time = &p2_fall_time;
     p_move();
@@ -899,7 +896,6 @@ int main( void )
     p_snow = &p3_snow;
     p_vec = &p3_vec;
     p_trigger = &p3_trigger;
-    p_throw_trig = &p3_throw_trig;
     p_hit = &p3_hit;
     p_fall_time = &p3_fall_time;
     p_move();
