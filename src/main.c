@@ -102,6 +102,7 @@
 
 #define step_frame 10
 #define b_speed 2
+#define fall_limit 100
 
 #define DRIVER          "c64-ptvjoy.joy"
 
@@ -120,6 +121,8 @@ unsigned char *p_snow;
 unsigned char *p_vec;
 unsigned char *p_trigger;
 unsigned char *p_throw_trig;
+unsigned char *p_hit;
+unsigned char *p_fall_time;
 
 unsigned char *x_ball;
 unsigned char *y_ball;
@@ -129,6 +132,12 @@ unsigned char *b_active;
 
 unsigned char player;
 unsigned char joystat;
+
+unsigned char byte;
+unsigned char p0_hit=0;
+unsigned char p1_hit=0;
+unsigned char p2_hit=0;
+unsigned char p3_hit=0;
 
 extern char Music[]; 
 
@@ -161,7 +170,11 @@ static char shapes[7][4] = {
   {0,40,41,42}   //L4
 };
 
-
+/*bool isSet(unsigned char b, unsigned char n)
+{ 
+  return b & ( 1 << n);
+}
+*/
 void b_move()
 {
   //memcpy ((void*) SPRITE4_DATA, sb_snowball, 64);
@@ -183,6 +196,19 @@ void b_move()
     *b_active=2;
   }
 
+  //Check the value of (1 << bit) & byte. If it is nonzero, the bit is set.
+  byte=VIC.spr_coll;
+
+  if(byte & (1<<(player+4)))
+  {
+    if(!(byte & (1<<player)))
+    {
+      if (byte & (1<<0)){p0_hit=*b_vec;}
+      if (byte & (1<<1)){p1_hit=*b_vec;}
+      if (byte & (1<<2)){p2_hit=*b_vec;}
+      if (byte & (1<<3)){p3_hit=*b_vec;}
+    }
+  }
 }
 
 void p_up()
@@ -327,6 +353,41 @@ void p_still()
   else
   {
     *p_trigger=step_frame+1;
+  }
+}
+
+void p_fall()
+{
+  if(*p_trigger<=step_frame)
+  {
+    switch( *p_hit )
+    {
+      case 0:
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][15], 64);
+        break;
+      case 1:
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][31], 64);
+        break;
+      case 2:
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][15], 64);
+        break;
+      case 3:
+        memcpy ((void*) SPRITE_DATA, p_sprites[player][31], 64);
+        break;
+    }
+  }
+  else
+  {
+    *p_trigger=step_frame+1;
+  }
+  if(*p_fall_time>fall_limit)
+  {
+    *p_fall_time=0;
+    *p_hit=0;
+  }
+  else
+  {
+    ++*p_fall_time;
   }
 }
 
@@ -514,7 +575,11 @@ void p_move()
     b_move();
   }
 
-  if(*p_pick_step>0)
+  if(*p_hit!=0)
+  {
+    p_fall();
+  }
+  else if(*p_pick_step>0)
   {
     if(*p_vec==2){p_pickup_left();}
     else if(*p_vec==3){p_pickup_right();}
@@ -619,10 +684,10 @@ int main( void )
 
   unsigned char sRunning =1;
   unsigned char a;
-  unsigned char p0_step, p0_throw_step, p0_pick_step, p0_snow, p0_vec, p0_trigger, p0_throw_trig;
-  unsigned char p1_step, p1_throw_step, p1_pick_step, p1_snow, p1_vec, p1_trigger, p1_throw_trig;
-  unsigned char p2_step, p2_throw_step, p2_pick_step, p2_snow, p2_vec, p2_trigger, p2_throw_trig;
-  unsigned char p3_step, p3_throw_step, p3_pick_step, p3_snow, p3_vec, p3_trigger, p3_throw_trig;
+  unsigned char p0_step, p0_throw_step, p0_pick_step, p0_snow, p0_vec, p0_trigger, p0_throw_trig, p0_fall_time;
+  unsigned char p1_step, p1_throw_step, p1_pick_step, p1_snow, p1_vec, p1_trigger, p1_throw_trig, p1_fall_time;
+  unsigned char p2_step, p2_throw_step, p2_pick_step, p2_snow, p2_vec, p2_trigger, p2_throw_trig, p2_fall_time;
+  unsigned char p3_step, p3_throw_step, p3_pick_step, p3_snow, p3_vec, p3_trigger, p3_throw_trig, p3_fall_time;
   
   unsigned char b0_active,b1_active,b2_active,b3_active;
   unsigned char b0_vec,b1_vec,b2_vec,b3_vec;
@@ -664,7 +729,7 @@ int main( void )
   clrscr ();
   bgcolor (1);
   bordercolor (1);
-  textcolor (1);
+
 
   VIC.bgcolor[0] = 1;
   VIC.bgcolor[1] = 1;
@@ -754,7 +819,7 @@ int main( void )
   memcpy ((void*) SPRITE5_DATA, sb_snowball, 64);
   memcpy ((void*) SPRITE6_DATA, sb_snowball, 64);
   memcpy ((void*) SPRITE7_DATA, sb_snowball, 64);
-
+  textcolor (0);
 
   while( sRunning )
   {
@@ -775,6 +840,8 @@ int main( void )
     p_vec = &p0_vec;
     p_trigger = &p0_trigger;
     p_throw_trig = &p0_throw_trig;
+    p_hit = &p0_hit;
+    p_fall_time = &p0_fall_time;
     p_move();
 
 
@@ -793,6 +860,8 @@ int main( void )
     p_vec = &p1_vec;
     p_trigger = &p1_trigger;
     p_throw_trig = &p1_throw_trig;
+    p_hit = &p1_hit;
+    p_fall_time = &p1_fall_time;
     p_move();
 
 
@@ -811,6 +880,8 @@ int main( void )
     p_vec = &p2_vec;
     p_trigger = &p2_trigger;
     p_throw_trig = &p2_throw_trig;
+    p_hit = &p2_hit;
+    p_fall_time = &p2_fall_time;
     p_move();
 
 
@@ -829,7 +900,22 @@ int main( void )
     p_vec = &p3_vec;
     p_trigger = &p3_trigger;
     p_throw_trig = &p3_throw_trig;
+    p_hit = &p3_hit;
+    p_fall_time = &p3_fall_time;
     p_move();
+
+    //if(VIC.spr_coll==0xC0){cputsxy(1,25,"0+1");}
+    //if(VIC.spr_coll==0xA0){cputsxy(2,25,"0+2");}
+    //if(VIC.spr_coll==0x90){cputsxy(3,25,"0+3");}
+    //if(VIC.spr_coll==0x60){cputsxy(4,25,"1+2");}
+
+
+
+
+    //gotoxy( 1, 21 ); cputs("coll: $"); cputhex8( VIC.spr_coll );
+    //gotoxy( 1, 22 ); cputs("prio: $"); cputhex8( VIC.spr_prio );
+    //gotoxy( 1, 23 ); cputs("   x: $"); cputc( VIC.spr_hi_x >> 0 & 0x1 ? '1' : '0'); cputhex8( VIC.spr0_x );
+    //gotoxy( 1, 24 ); cputs("   y: $"); cputhex8( VIC.spr0_y );
 
 
     //for(a=0;a<100;a++){/*test*/};
