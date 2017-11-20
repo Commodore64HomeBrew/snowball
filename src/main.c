@@ -110,34 +110,37 @@ extern char SpriteColor[2];
 extern char SpriteData[]; 
 
 int (*SPRITE_DATA);
+int (*BALL_DATA);
 
-unsigned char *x_pos;
-unsigned char *y_pos;
 
-unsigned char *p_step;
-unsigned char *p_throw_step;
-unsigned char *p_pick_step;
-unsigned char *p_snow;
-unsigned char *p_vec;
-unsigned char *p_trigger;
-unsigned char *p_trigger;
-unsigned char *p_hit;
-unsigned char *p_fall_time;
-
-unsigned char *x_ball;
-unsigned char *y_ball;
-
-unsigned char *b_vec;
-unsigned char *b_active;
-
-unsigned char player;
 unsigned char joystat;
 
-unsigned char byte;
+
 unsigned char p0_hit=0;
 unsigned char p1_hit=0;
 unsigned char p2_hit=0;
 unsigned char p3_hit=0;
+
+struct p_state {
+  unsigned char player;
+  unsigned char p_step;
+  unsigned char p_throw_step;
+  unsigned char p_pick_step;
+  unsigned char p_snow;
+  unsigned char p_vec;
+  unsigned char p_trigger;
+  unsigned char p_hit;
+  unsigned char p_fall_time;
+  unsigned char p_action;
+  unsigned char (*x_pos);
+  unsigned char (*y_pos);
+  unsigned char (*x_ball);
+  unsigned char (*y_ball);
+  unsigned char b_vec;
+  unsigned char b_active;
+};
+
+
 
 extern char Music[]; 
 
@@ -175,436 +178,454 @@ static char shapes[7][4] = {
   return b & ( 1 << n);
 }
 */
-void b_move()
+void b_move( struct p_state *s )
 {
+
+   unsigned char byte;
   //memcpy ((void*) SPRITE4_DATA, sb_snowball, 64);
-
-  if(*b_active==2)
-  {
-    if(*b_vec==2){*x_ball=*x_ball-b_speed;}
-    else if(*b_vec==3){*x_ball=*x_ball+b_speed;}
-
-    if(*x_ball<5){
-      *x_ball=1;
-      *y_ball=1;
-      *b_active=0;
-    }
+ 
+  if(s->b_active==3){
+    *(s->x_ball) = 1;
+    *(s->y_ball) = 1;
+    s->b_active=0;
+    memcpy ((void*) BALL_DATA, sb_snowball, 64);
+    return;
   }
-  else if(*b_active==1){
-    *x_ball = *x_pos;
-    *y_ball = *y_pos;
-    *b_active=2;
+  else if(s->b_active==1){
+    *(s->x_ball) = *(s->x_pos);
+    *(s->y_ball) = *(s->y_pos);
+    s->b_active=2;
+  }
+  else if(s->b_active==2)
+  {
+    if(s->b_vec==2){*(s->x_ball)=*(s->x_ball)-b_speed;}
+    else if(s->b_vec==3){*(s->x_ball)=*(s->x_ball)+b_speed;}
+
+    if(*(s->x_ball)<5){
+      *(s->x_ball)=1;
+      *(s->y_ball)=1;
+      s->b_active=0;
+    }
   }
 
   //Check the value of (1 << bit) & byte. If it is nonzero, the bit is set.
   byte=VIC.spr_coll;
 
-  if(byte & (1<<(player+4)))
+  if(byte & (1<<(s->player+4)))
   {
-    if(!(byte & (1<<player)))
+
+    if(!(byte & (1<<s->player)))
     {
-      if (byte & (1<<0)){p0_hit=*b_vec;}
-      if (byte & (1<<1)){p1_hit=*b_vec;}
-      if (byte & (1<<2)){p2_hit=*b_vec;}
-      if (byte & (1<<3)){p3_hit=*b_vec;}
+      memcpy ((void*) BALL_DATA, sb_explode, 64);
+      s->b_active=3;
+
+      if (byte & (1<<0)){p0_hit=s->b_vec;}
+      if (byte & (1<<1)){p1_hit=s->b_vec;}
+      if (byte & (1<<2)){p2_hit=s->b_vec;}
+      if (byte & (1<<3)){p3_hit=s->b_vec;}
     }
   }
 }
 
-void p_up()
+void p_up( struct p_state *s )
 {
 
-  *y_pos = --*y_pos;
+  *(s->y_pos) = --*(s->y_pos);
 
-  if(*p_vec!=0){
-    *p_vec=0;
-    *p_trigger=step_frame;
+  if(s->p_vec!=0){
+    s->p_vec=0;
+    s->p_trigger=step_frame;
   }
 
-  if(*p_trigger == step_frame){
+  if(s->p_trigger == step_frame){
 
-    switch( *p_step )
-    {
-      //Move cursor down
-      case 0:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][36], 64);
-        break;
-      case 1:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][37], 64);
-        break;
-    }
-    ++*p_step;
-    if(*p_step>1){*p_step=0;}
-  }
-  ++*p_trigger;
-  if(*p_trigger>step_frame){*p_trigger=0;}
-
-}
-
-void p_down()
-{
-
-  *y_pos = ++*y_pos;
-  
-  if(*p_vec!=1){
-    *p_vec=1;
-    *p_trigger=step_frame;
-  }
-
-  if(*p_trigger == step_frame){
-
-    switch( *p_step )
+    switch( s->p_step )
     {
       //Move cursor down
       case 0:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][33], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][36], 64);
         break;
       case 1:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][34], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][37], 64);
         break;
     }
-    ++*p_step;
-    if(*p_step>1){*p_step=0;}
+    ++s->p_step;
+    if(s->p_step>1){s->p_step=0;}
   }
-  ++*p_trigger;
-  if(*p_trigger>step_frame){*p_trigger=0;}
+  ++s->p_trigger;
+  if(s->p_trigger>step_frame){s->p_trigger=0;}
 
 }
 
-
-void p_left()
+void p_down( struct p_state *s )
 {
 
-  *x_pos = --*x_pos;
+  *(s->y_pos) = ++*(s->y_pos);
   
-  if(*p_vec!=2){
-    *p_vec=2;
-    *p_trigger=step_frame;
+  if(s->p_vec!=1){
+    s->p_vec=1;
+    s->p_trigger=step_frame;
   }
 
-  if(*p_trigger == step_frame){
+  if(s->p_trigger == step_frame){
 
-    switch( *p_step )
+    switch( s->p_step )
     {
+      //Move cursor down
       case 0:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][16], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][33], 64);
         break;
       case 1:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][18], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][34], 64);
+        break;
+    }
+    ++s->p_step;
+    if(s->p_step>1){s->p_step=0;}
+  }
+  ++s->p_trigger;
+  if(s->p_trigger>step_frame){s->p_trigger=0;}
+
+}
+
+
+void p_left( struct p_state *s )
+{
+
+  *(s->x_pos) = --*(s->x_pos);
+  
+  if(s->p_vec!=2){
+    s->p_vec=2;
+    s->p_trigger=step_frame;
+  }
+
+  if(s->p_trigger == step_frame){
+
+    switch( s->p_step )
+    {
+      case 0:
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][16], 64);
+        break;
+      case 1:
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][18], 64);
         break;
     }
 
-    ++*p_step;
-    if(*p_step>1){*p_step=0;}
+    ++s->p_step;
+    if(s->p_step>1){s->p_step=0;}
   }
-  ++*p_trigger;
-  if(*p_trigger>step_frame){*p_trigger=0;}
+  ++s->p_trigger;
+  if(s->p_trigger>step_frame){s->p_trigger=0;}
 }
 
-void p_right()
+void p_right( struct p_state *s )
 {
 
-  *x_pos = ++*x_pos;
+  *(s->x_pos) = ++*(s->x_pos);
 
-  if(*p_vec!=3){
-    *p_vec=3;
-    *p_trigger=step_frame;
+  if(s->p_vec!=3){
+    s->p_vec=3;
+    s->p_trigger=step_frame;
   }
 
-  if(*p_trigger == step_frame){
+  if(s->p_trigger == step_frame){
 
-    switch( *p_step )
+    switch( s->p_step )
     {
       case 0:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][0], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][0], 64);
         break;
       case 1:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][2], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][2], 64);
         break;
 
     }
-    ++*p_step;
-    if(*p_step>1){*p_step=0;}
+    ++s->p_step;
+    if(s->p_step>1){s->p_step=0;}
   }
-  ++*p_trigger;
-  if(*p_trigger>step_frame){*p_trigger=0;}
+  ++s->p_trigger;
+  if(s->p_trigger>step_frame){s->p_trigger=0;}
 }
 
-void p_still()
+void p_still( struct p_state *s )
 {
-  if(*p_trigger<=step_frame)
+  if(s->p_trigger<=step_frame)
   {
-    switch( *p_vec )
+    switch( s->p_vec )
     {
       case 0:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][35], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][35], 64);
         break;
       case 1:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][32], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][32], 64);
         break;
       case 2:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][17], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][17], 64);
         break;
       case 3:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][1], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][1], 64);
         break;
     }
   }
   else
   {
-    *p_trigger=step_frame+1;
+    s->p_trigger=step_frame+1;
   }
 }
 
-void p_fall()
+void p_fall( struct p_state *s )
 {
-  if(*p_trigger<=step_frame)
+  if(s->p_trigger<=step_frame)
   {
-    switch( *p_hit )
+    switch( s->p_hit )
     {
       case 0:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][15], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][15], 64);
         break;
       case 1:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][31], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][31], 64);
         break;
       case 2:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][15], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][15], 64);
         break;
       case 3:
-        memcpy ((void*) SPRITE_DATA, p_sprites[player][31], 64);
+        memcpy ((void*) SPRITE_DATA, p_sprites[s->player][31], 64);
         break;
     }
   }
   else
   {
-    *p_trigger=step_frame+1;
+    s->p_trigger=step_frame+1;
   }
-  if(*p_fall_time>fall_limit)
+  if(s->p_fall_time>fall_limit)
   {
-    *p_fall_time=0;
-    *p_hit=0;
+    s->p_fall_time=0;
+    s->p_hit=0;
   }
   else
   {
-    ++*p_fall_time;
+    ++s->p_fall_time;
   }
 }
 
-void p_throw_left()
+void p_throw_left( struct p_state *s )
 {
 
-  if(*p_throw_step<7)
+  if(s->p_throw_step<7)
   {
-    if(*p_trigger == 0)
+    if(s->p_trigger == 0)
     {
-      switch( *p_throw_step )
+      switch( s->p_throw_step )
       {
         case 0:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][23], 64);
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][23], 64);
           break;
         case 1:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][24], 64);
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][24], 64);
           break;
         case 2:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][25], 64);
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][25], 64);
           break;
         case 3:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][26], 64);
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][26], 64);
           break;
         case 4:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][27], 64);
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][27], 64);
           break;
         case 5:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][28], 64);
-          if(*p_snow==1)
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][28], 64);
+          if(s->p_snow==1)
           {
-            *b_active=1;
-            *b_vec=2;
-            b_move();
-            //*p_snow=0;
-            *p_snow=1;
+            s->b_active=1;
+            s->b_vec=2;
+            b_move(s);
+            //s->p_snow=0;
+            s->p_snow=1;
           }
           break;
         case 6:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][29], 64);
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][29], 64);
           break;
       }
-      ++*p_throw_step;
+      ++s->p_throw_step;
     }
   }
   else
   {
-    *p_throw_step=0;
-    //*p_snow=0;
-    *p_snow=1;
+    s->p_throw_step=0;
+    //s->p_snow=0;
+    s->p_snow=1;
   }
-  ++*p_trigger;
-  if(*p_trigger>step_frame){*p_trigger=0;}
+  ++s->p_trigger;
+  if(s->p_trigger>step_frame){s->p_trigger=0;}
 }
 
-void p_throw_right()
+void p_throw_right( struct p_state *s )
 {
 
-  if(*p_throw_step<7)
+  if(s->p_throw_step<7)
   {
-    if(*p_trigger == 0)
+    if(s->p_trigger == 0)
     {
-      switch( *p_throw_step )
+      switch( s->p_throw_step )
       {
         case 0:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][7], 64);
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][7], 64);
           break;
         case 1:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][8], 64);
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][8], 64);
           break;
         case 2:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][9], 64);
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][9], 64);
           break;
         case 3:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][10], 64);
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][10], 64);
           break;
         case 4:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][11], 64);
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][11], 64);
           break;
         case 5:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][12], 64);
-          if(*p_snow==1)
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][12], 64);
+          if(s->p_snow==1)
           {
-            *b_active=1;
-            *b_vec=3;
-            b_move();
-            //*p_snow=0;
-            *p_snow=1;
+            s->b_active=1;
+            s->b_vec=3;
+            b_move(s);
+            //s->p_snow=0;
+            s->p_snow=1;
           }
           break;
         case 6:
-          memcpy ((void*) SPRITE_DATA, p_sprites[player][13], 64);
+          memcpy ((void*) SPRITE_DATA, p_sprites[s->player][13], 64);
           break;
       }
-      ++*p_throw_step;
+      ++s->p_throw_step;
     }
   }
   else
   {
-    *p_throw_step=0;
-    //*p_snow=0;
-    *p_snow=1;
+    s->p_throw_step=0;
+    //s->p_snow=0;
+    s->p_snow=1;
   }
-  ++*p_trigger;
-  if(*p_trigger>step_frame){*p_trigger=0;}
+  ++s->p_trigger;
+  if(s->p_trigger>step_frame){s->p_trigger=0;}
 }
 
-void p_pickup_right()
+void p_pickup_right( struct p_state *s )
 {
-  switch( *p_pick_step )
+  switch( s->p_pick_step )
   {
     //Move cursor down
     case 0:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][3], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][3], 64);
       break;
     case 1:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][4], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][4], 64);
       break;
     case 2:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][5], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][5], 64);
       break;
     case 3:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][6], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][6], 64);
       break;
     case 4:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][5], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][5], 64);
       break;
     case 5:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][4], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][4], 64);
       break;
     case 6:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][3], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][3], 64);
       break;
   }
-  ++*p_pick_step;
-  if(*p_pick_step>6)
+  ++s->p_pick_step;
+  if(s->p_pick_step>6)
     {
-      *p_pick_step=0;
-      *p_snow=1;
+      s->p_pick_step=0;
+      s->p_snow=1;
     }
 }
 
-void p_pickup_left()
+void p_pickup_left( struct p_state *s )
 {
-  switch( *p_pick_step )
+  switch( s->p_pick_step )
   {
     //Move cursor down
     case 0:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][19], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][19], 64);
       break;
     case 1:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][20], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][20], 64);
       break;
     case 2:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][21], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][21], 64);
       break;
     case 3:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][22], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][22], 64);
       break;
     case 4:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][21], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][21], 64);
       break;
     case 5:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][20], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][20], 64);
       break;
     case 6:
-      memcpy ((void*) SPRITE_DATA, p_sprites[player][19], 64);
+      memcpy ((void*) SPRITE_DATA, p_sprites[s->player][19], 64);
       break;
   }
-  ++*p_pick_step;
-  if(*p_pick_step>6)
+  ++s->p_pick_step;
+  if(s->p_pick_step>6)
     {
-      *p_pick_step=0;
-      *p_snow=1;
+      s->p_pick_step=0;
+      s->p_snow=1;
     }
 }
 
 
-void p_move()
-{
+void p_move( struct p_state *s ){
 
-  joystat = joy_read (player);
-
-  if(*b_active==2){
-    b_move();
+  if(s->b_active>1){
+    b_move(s);
   }
 
-  if(*p_hit!=0)
+  if(s->p_action>0)
   {
-    p_fall();
-  }
-  else if(*p_pick_step>0)
-  {
-    if(*p_vec==2){p_pickup_left();}
-    else if(*p_vec==3){p_pickup_right();}
-  } 
-  else if(*p_throw_step>0)
-  {
-    if(*p_vec==2){p_throw_left();}
-    else if(*p_vec==3){p_throw_right();}
+    if(s->p_hit>0)
+    {
+      p_fall(s);
+      return;
+    }
+    else if(s->p_pick_step>0)
+    {
+      if(s->p_vec==2){p_pickup_left(s);}
+      else if(s->p_vec==3){p_pickup_right(s);}
+      return;
+    }
+    else if(s->p_throw_step>0)
+    {
+      if(s->p_vec==2){p_throw_left(s);}
+      else if(s->p_vec==3){p_throw_right(s);}
+      return;
+    }
   }
 
-  else if(JOY_BTN_1 (joystat))
+  joystat = joy_read (s->player);
+  
+  if(JOY_BTN_1 (joystat))
   {
     if(JOY_DOWN (joystat))
     {
-      if(*p_vec==2){p_pickup_left();}
-      else if(*p_vec==3){p_pickup_right();}
+      if(s->p_vec==2){p_pickup_left(s);}
+      else if(s->p_vec==3){p_pickup_right(s);}
     }
     else
     {
-      *p_trigger=0;
-      if(*p_vec==2){
-        p_throw_left();
+      s->p_trigger=0;
+      if(s->p_vec==2){
+        p_throw_left(s);
       }
-      else if(*p_vec==3){
-        p_throw_right();
+      else if(s->p_vec==3){
+        p_throw_right(s);
       }
     }
   }
@@ -613,22 +634,22 @@ void p_move()
   {
     if(JOY_LEFT (joystat))
     {
-      if(*y_pos < heightMax && *x_pos > widthMin)
+      if(*(s->y_pos) < heightMax && *(s->x_pos) > widthMin)
       {
-          p_left();
-          *y_pos = ++*y_pos;
+          p_left(s);
+          *(s->y_pos) = ++*(s->y_pos);
       }
     }
     else if(JOY_RIGHT (joystat))
     {
-      if(*y_pos < heightMax && *x_pos < widthMax)
+      if(*(s->y_pos) < heightMax && *(s->x_pos) < widthMax)
       {
-          p_right();
-          *y_pos = ++*y_pos;
+          p_right(s);
+          *(s->y_pos) = ++*(s->y_pos);
       }
     }
-    else if(*y_pos < heightMax){
-        p_down();
+    else if(*(s->y_pos) < heightMax){
+        p_down(s);
     }
   }
 
@@ -636,39 +657,39 @@ void p_move()
   {
     if(JOY_RIGHT (joystat))
     {
-      if(*y_pos > heightMin && *x_pos < widthMax)
+      if(*(s->y_pos) > heightMin && *(s->x_pos) < widthMax)
       {
-          p_right();
-          *y_pos = --*y_pos;
+          p_right(s);
+          *(s->y_pos) = --*(s->y_pos);
       }
     }
     else if(JOY_LEFT (joystat))
     {
-      if(*y_pos > heightMin && *x_pos > widthMin)
+      if(*(s->y_pos) > heightMin && *(s->x_pos) > widthMin)
       {
-          p_left();
-          *y_pos = --*y_pos;
+          p_left(s);
+          *(s->y_pos) = --*(s->y_pos);
       }
     }
-    else if(*y_pos > heightMin){
-       p_up();
+    else if(*(s->y_pos) > heightMin){
+       p_up(s);
     }
   }
   else if(JOY_LEFT (joystat))
   {
-    if(*x_pos > widthMin){
-      p_left();
+    if(*(s->x_pos) > widthMin){
+      p_left(s);
     }
   }
   else if(JOY_RIGHT (joystat))
   {
-    if(*x_pos < widthMax){
-      p_right();
+    if(*(s->x_pos) < widthMax){
+      p_right(s);
     }
   }
   else
   {
-    p_still();
+    p_still(s);
   }
 
 
@@ -683,7 +704,7 @@ int main( void )
 
 
   unsigned char sRunning =1;
-  unsigned char a;
+/*
   unsigned char p0_step, p0_throw_step, p0_pick_step, p0_snow, p0_vec, p0_trigger, p0_throw_trig, p0_fall_time;
   unsigned char p1_step, p1_throw_step, p1_pick_step, p1_snow, p1_vec, p1_trigger, p1_throw_trig, p1_fall_time;
   unsigned char p2_step, p2_throw_step, p2_pick_step, p2_snow, p2_vec, p2_trigger, p2_throw_trig, p2_fall_time;
@@ -691,6 +712,43 @@ int main( void )
   
   unsigned char b0_active,b1_active,b2_active,b3_active;
   unsigned char b0_vec,b1_vec,b2_vec,b3_vec;
+*/
+  struct p_state p0;
+  struct p_state p1;
+  struct p_state p2;
+  struct p_state p3;
+
+  p0.player=0;
+  p0.p_action=0;
+  p0.p_vec=3;
+  p0.x_pos = &VIC.spr0_x;
+  p0.y_pos = &VIC.spr0_y;
+  p0.x_ball = &VIC.spr4_x;
+  p0.y_ball = &VIC.spr4_y;
+
+  p1.player=1;
+  p1.p_action=0;
+  p1.p_vec=2;
+  p1.x_pos = &VIC.spr1_x;
+  p1.y_pos = &VIC.spr1_y;
+  p1.x_ball = &VIC.spr5_x;
+  p1.y_ball = &VIC.spr5_y;
+
+  p2.player=2;
+  p2.p_action=0;
+  p2.p_vec=3;
+  p2.x_pos = &VIC.spr2_x;
+  p2.y_pos = &VIC.spr2_y;
+  p2.x_ball = &VIC.spr6_x;
+  p2.y_ball = &VIC.spr6_y;
+
+  p3.player=3;
+  p3.p_action=0;
+  p3.p_vec=2;
+  p3.x_pos = &VIC.spr3_x;
+  p3.y_pos = &VIC.spr3_y;
+  p3.x_ball = &VIC.spr7_x;
+  p3.y_ball = &VIC.spr7_y;
 
 
   //memset((void*)MyScreenBase,0,1024); 
@@ -777,24 +835,17 @@ int main( void )
   VIC.spr_ena = Spr_EnableBit[6];
   VIC.spr_ena = Spr_EnableBit[8];
 
-
-
-
   VIC.spr0_x = widthMin;
   VIC.spr0_y = heightMin;
-  p0_vec=3;
 
   VIC.spr1_x = widthMax;
   VIC.spr1_y = heightMin;
-  p1_vec=2;
 
   VIC.spr2_x = widthMin;
   VIC.spr2_y = heightMax;
-  p2_vec=3;
 
   VIC.spr3_x = widthMax;
   VIC.spr3_y = heightMax;
-  p3_vec=2;
 
   VIC.spr4_x = 1;
   VIC.spr4_y = 1;
@@ -825,87 +876,25 @@ int main( void )
   {
 
 
-    player = 0;
     SPRITE_DATA = SPRITE0_DATA;
-    x_pos = &VIC.spr0_x;
-    y_pos = &VIC.spr0_y;
-    x_ball = &VIC.spr4_x;
-    y_ball = &VIC.spr4_y;
-    b_active = &b0_active;
-    b_vec = &b0_vec;
-    p_step = &p0_step;
-    p_throw_step = &p0_throw_step;
-    p_pick_step = &p0_pick_step;
-    p_snow = &p0_snow;
-    p_vec = &p0_vec;
-    p_trigger = &p0_trigger;
-    p_hit = &p0_hit;
-    p_fall_time = &p0_fall_time;
-    p_move();
+    BALL_DATA = SPRITE4_DATA;
+    p_move(&p0);
+    p0.p_hit = p0_hit;
 
-
-    player = 1;
     SPRITE_DATA = SPRITE1_DATA;
-    x_pos = &VIC.spr1_x;
-    y_pos = &VIC.spr1_y;
-    x_ball = &VIC.spr5_x;
-    y_ball = &VIC.spr5_y;
-    b_active = &b1_active;
-    b_vec = &b1_vec;
-    p_step = &p1_step;
-    p_throw_step = &p1_throw_step;
-    p_pick_step = &p1_pick_step;
-    p_snow = &p1_snow;
-    p_vec = &p1_vec;
-    p_trigger = &p1_trigger;
-    p_hit = &p1_hit;
-    p_fall_time = &p1_fall_time;
-    p_move();
+    BALL_DATA = SPRITE5_DATA;
+    p_move(&p1);
+    p1.p_hit = p1_hit;
 
-
-    player = 2;
     SPRITE_DATA = SPRITE2_DATA;
-    x_pos = &VIC.spr2_x;
-    y_pos = &VIC.spr2_y;
-    x_ball = &VIC.spr6_x;
-    y_ball = &VIC.spr6_y;
-    b_active = &b2_active;
-    b_vec = &b2_vec;
-    p_step = &p2_step;
-    p_throw_step = &p2_throw_step;
-    p_pick_step = &p2_pick_step;
-    p_snow = &p2_snow;
-    p_vec = &p2_vec;
-    p_trigger = &p2_trigger;
-    p_hit = &p2_hit;
-    p_fall_time = &p2_fall_time;
-    p_move();
+    BALL_DATA = SPRITE6_DATA;
+    p_move(&p2);
+    p2.p_hit = p2_hit;
 
-
-    player = 3;
     SPRITE_DATA = SPRITE3_DATA;
-    x_pos = &VIC.spr3_x;
-    y_pos = &VIC.spr3_y;
-    x_ball = &VIC.spr7_x;
-    y_ball = &VIC.spr7_y;
-    b_active = &b3_active;
-    b_vec = &b3_vec;
-    p_step = &p3_step;
-    p_throw_step = &p3_throw_step;
-    p_pick_step = &p3_pick_step;
-    p_snow = &p3_snow;
-    p_vec = &p3_vec;
-    p_trigger = &p3_trigger;
-    p_hit = &p3_hit;
-    p_fall_time = &p3_fall_time;
-    p_move();
-
-    //if(VIC.spr_coll==0xC0){cputsxy(1,25,"0+1");}
-    //if(VIC.spr_coll==0xA0){cputsxy(2,25,"0+2");}
-    //if(VIC.spr_coll==0x90){cputsxy(3,25,"0+3");}
-    //if(VIC.spr_coll==0x60){cputsxy(4,25,"1+2");}
-
-
+    BALL_DATA = SPRITE7_DATA;
+    p_move(&p3);
+    p3.p_hit = p3_hit;
 
 
     //gotoxy( 1, 21 ); cputs("coll: $"); cputhex8( VIC.spr_coll );
