@@ -132,10 +132,10 @@ struct p_state {
   unsigned char p_hit;
   unsigned char p_fall_time;
   unsigned char p_action;
-  unsigned char (*x_pos);
-  unsigned char (*y_pos);
-  unsigned char (*x_ball);
-  unsigned char (*y_ball);
+  unsigned char (*p_x);
+  unsigned char (*p_y);
+  unsigned char (*b_x);
+  unsigned char (*b_y);
   unsigned char b_vec;
   unsigned char b_active;
 };
@@ -185,25 +185,25 @@ void b_move( struct p_state *s )
   //memcpy ((void*) SPRITE4_DATA, sb_snowball, 64);
  
   if(s->b_active==3){
-    *(s->x_ball) = 1;
-    *(s->y_ball) = 1;
+    *(s->b_x) = 1;
+    *(s->b_y) = 1;
     s->b_active=0;
-    memcpy ((void*) BALL_DATA, sb_snowball, 64);
     return;
   }
   else if(s->b_active==1){
-    *(s->x_ball) = *(s->x_pos);
-    *(s->y_ball) = *(s->y_pos);
+    memcpy ((void*) BALL_DATA, sb_snowball, 64);
+    *(s->b_x) = *(s->p_x);
+    *(s->b_y) = *(s->p_y);
     s->b_active=2;
   }
   else if(s->b_active==2)
   {
-    if(s->b_vec==2){*(s->x_ball)=*(s->x_ball)-b_speed;}
-    else if(s->b_vec==3){*(s->x_ball)=*(s->x_ball)+b_speed;}
+    if(s->b_vec==2){*(s->b_x)=*(s->b_x)-b_speed;}
+    else if(s->b_vec==3){*(s->b_x)=*(s->b_x)+b_speed;}
 
-    if(*(s->x_ball)<5){
-      *(s->x_ball)=1;
-      *(s->y_ball)=1;
+    if(*(s->b_x)<5){
+      *(s->b_x)=1;
+      *(s->b_y)=1;
       s->b_active=0;
     }
   }
@@ -230,7 +230,7 @@ void b_move( struct p_state *s )
 void p_up( struct p_state *s )
 {
 
-  *(s->y_pos) = --*(s->y_pos);
+  *(s->p_y) = --*(s->p_y);
 
   if(s->p_vec!=0){
     s->p_vec=0;
@@ -260,7 +260,7 @@ void p_up( struct p_state *s )
 void p_down( struct p_state *s )
 {
 
-  *(s->y_pos) = ++*(s->y_pos);
+  *(s->p_y) = ++*(s->p_y);
   
   if(s->p_vec!=1){
     s->p_vec=1;
@@ -291,7 +291,7 @@ void p_down( struct p_state *s )
 void p_left( struct p_state *s )
 {
 
-  *(s->x_pos) = --*(s->x_pos);
+  *(s->p_x) = --*(s->p_x);
   
   if(s->p_vec!=2){
     s->p_vec=2;
@@ -320,7 +320,7 @@ void p_left( struct p_state *s )
 void p_right( struct p_state *s )
 {
 
-  *(s->x_pos) = ++*(s->x_pos);
+  *(s->p_x) = ++*(s->p_x);
 
   if(s->p_vec!=3){
     s->p_vec=3;
@@ -634,21 +634,21 @@ void p_move( struct p_state *s ){
   {
     if(JOY_LEFT (joystat))
     {
-      if(*(s->y_pos) < heightMax && *(s->x_pos) > widthMin)
+      if(*(s->p_y) < heightMax && *(s->p_x) > widthMin)
       {
           p_left(s);
-          *(s->y_pos) = ++*(s->y_pos);
+          *(s->p_y) = ++*(s->p_y);
       }
     }
     else if(JOY_RIGHT (joystat))
     {
-      if(*(s->y_pos) < heightMax && *(s->x_pos) < widthMax)
+      if(*(s->p_y) < heightMax && *(s->p_x) < widthMax)
       {
           p_right(s);
-          *(s->y_pos) = ++*(s->y_pos);
+          *(s->p_y) = ++*(s->p_y);
       }
     }
-    else if(*(s->y_pos) < heightMax){
+    else if(*(s->p_y) < heightMax){
         p_down(s);
     }
   }
@@ -657,33 +657,33 @@ void p_move( struct p_state *s ){
   {
     if(JOY_RIGHT (joystat))
     {
-      if(*(s->y_pos) > heightMin && *(s->x_pos) < widthMax)
+      if(*(s->p_y) > heightMin && *(s->p_x) < widthMax)
       {
           p_right(s);
-          *(s->y_pos) = --*(s->y_pos);
+          *(s->p_y) = --*(s->p_y);
       }
     }
     else if(JOY_LEFT (joystat))
     {
-      if(*(s->y_pos) > heightMin && *(s->x_pos) > widthMin)
+      if(*(s->p_y) > heightMin && *(s->p_x) > widthMin)
       {
           p_left(s);
-          *(s->y_pos) = --*(s->y_pos);
+          *(s->p_y) = --*(s->p_y);
       }
     }
-    else if(*(s->y_pos) > heightMin){
+    else if(*(s->p_y) > heightMin){
        p_up(s);
     }
   }
   else if(JOY_LEFT (joystat))
   {
-    if(*(s->x_pos) > widthMin){
+    if(*(s->p_x) > widthMin){
       p_left(s);
     }
   }
   else if(JOY_RIGHT (joystat))
   {
-    if(*(s->x_pos) < widthMax){
+    if(*(s->p_x) < widthMax){
       p_right(s);
     }
   }
@@ -701,18 +701,8 @@ void p_move( struct p_state *s ){
 int main( void )
 {
 
-
-
   unsigned char sRunning =1;
-/*
-  unsigned char p0_step, p0_throw_step, p0_pick_step, p0_snow, p0_vec, p0_trigger, p0_throw_trig, p0_fall_time;
-  unsigned char p1_step, p1_throw_step, p1_pick_step, p1_snow, p1_vec, p1_trigger, p1_throw_trig, p1_fall_time;
-  unsigned char p2_step, p2_throw_step, p2_pick_step, p2_snow, p2_vec, p2_trigger, p2_throw_trig, p2_fall_time;
-  unsigned char p3_step, p3_throw_step, p3_pick_step, p3_snow, p3_vec, p3_trigger, p3_throw_trig, p3_fall_time;
-  
-  unsigned char b0_active,b1_active,b2_active,b3_active;
-  unsigned char b0_vec,b1_vec,b2_vec,b3_vec;
-*/
+
   struct p_state p0;
   struct p_state p1;
   struct p_state p2;
@@ -721,34 +711,34 @@ int main( void )
   p0.player=0;
   p0.p_action=0;
   p0.p_vec=3;
-  p0.x_pos = &VIC.spr0_x;
-  p0.y_pos = &VIC.spr0_y;
-  p0.x_ball = &VIC.spr4_x;
-  p0.y_ball = &VIC.spr4_y;
+  p0.p_x = &VIC.spr0_x;
+  p0.p_y = &VIC.spr0_y;
+  p0.b_x = &VIC.spr4_x;
+  p0.b_y = &VIC.spr4_y;
 
   p1.player=1;
   p1.p_action=0;
   p1.p_vec=2;
-  p1.x_pos = &VIC.spr1_x;
-  p1.y_pos = &VIC.spr1_y;
-  p1.x_ball = &VIC.spr5_x;
-  p1.y_ball = &VIC.spr5_y;
+  p1.p_x = &VIC.spr1_x;
+  p1.p_y = &VIC.spr1_y;
+  p1.b_x = &VIC.spr5_x;
+  p1.b_y = &VIC.spr5_y;
 
   p2.player=2;
   p2.p_action=0;
   p2.p_vec=3;
-  p2.x_pos = &VIC.spr2_x;
-  p2.y_pos = &VIC.spr2_y;
-  p2.x_ball = &VIC.spr6_x;
-  p2.y_ball = &VIC.spr6_y;
+  p2.p_x = &VIC.spr2_x;
+  p2.p_y = &VIC.spr2_y;
+  p2.b_x = &VIC.spr6_x;
+  p2.b_y = &VIC.spr6_y;
 
   p3.player=3;
   p3.p_action=0;
   p3.p_vec=2;
-  p3.x_pos = &VIC.spr3_x;
-  p3.y_pos = &VIC.spr3_y;
-  p3.x_ball = &VIC.spr7_x;
-  p3.y_ball = &VIC.spr7_y;
+  p3.p_x = &VIC.spr3_x;
+  p3.p_y = &VIC.spr3_y;
+  p3.b_x = &VIC.spr7_x;
+  p3.b_y = &VIC.spr7_y;
 
 
   //memset((void*)MyScreenBase,0,1024); 
@@ -767,8 +757,6 @@ int main( void )
   //VICSetPage( 2 ); 
   //VICSetAddr( 0, 1 ); 
   //SprInit();
-
-
 
 
   /* Load and install the mouse driver */
