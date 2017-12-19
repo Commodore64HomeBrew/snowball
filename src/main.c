@@ -102,7 +102,7 @@
 
 #define step_frame 10
 #define b_speed 2
-#define fall_limit 100
+#define fall_limit 10
 
 #define DRIVER          "c64-ptvjoy.joy"
 
@@ -195,8 +195,9 @@ void b_move( struct p_state *s )
     *(s->b_x) = *(s->p_x);
     *(s->b_y) = *(s->p_y);
     s->b_active=2;
-  }
-  else if(s->b_active==2)
+    return;
+  
+}  else if(s->b_active==2)
   {
     if(s->b_vec==2){*(s->b_x)=*(s->b_x)-b_speed;}
     else if(s->b_vec==3){*(s->b_x)=*(s->b_x)+b_speed;}
@@ -588,8 +589,8 @@ void p_move( struct p_state *s ){
     b_move(s);
   }
 
-  if(s->p_action>0)
-  {
+  //if(s->p_action>0)
+  //{
     if(s->p_hit>0)
     {
       p_fall(s);
@@ -607,7 +608,7 @@ void p_move( struct p_state *s ){
       else if(s->p_vec==3){p_throw_right(s);}
       return;
     }
-  }
+  //}
 
   joystat = joy_read (s->player);
   
@@ -873,6 +874,7 @@ int main( void )
     BALL_DATA = SPRITE5_DATA;
     p_move(&p1);
     p1.p_hit = p1_hit;
+
 
     SPRITE_DATA = SPRITE2_DATA;
     BALL_DATA = SPRITE6_DATA;
